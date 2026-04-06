@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>暗記カード｜司法試験対策</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap');
+
+:root {
+  --bg: #f5f6fa;
+  --surface: #ffffff;
+  --surface2: #eef0f6;
+  --surface3: #e2e5ee;
+  --text: #1a1d27;
+  --text2: #6b7085;
+  --accent: #4a6adf;
+  --accent2: #3a56c5;
+  --correct: #16a34a;
+  --incorrect: #dc2626;
+  --warning: #d97706;
+  --border: rgba(0,0,0,0.08);
+  --radius: 16px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --header-bg: rgba(245,246,250,0.92);
+}
+
+body.dark {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #242836;
+  --surface3: #2e3345;
+  --text: #e8eaf0;
+  --text2: #9a9fb5;
+  --accent: #6c8cff;
+  --accent2: #4a6adf;
+  --correct: #34d399;
+  --incorrect: #f87171;
+  --warning: #fbbf24;
+  --border: rgba(255,255,255,0.06);
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  --header-bg: rgba(15,17,23,0.92);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  font-family: 'Zen Kaku Gothic New', 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Header */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--header-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+}
+.header-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.app-title { font-size:18px; font-weight:700; letter-spacing:-0.02em; }
+.app-title span { color: var(--accent); }
+.stats-row { display:flex; gap:12px; font-size:12px; color:var(--text2); }
+.stat-badge { background:var(--surface2); padding:3px 10px; border-radius:20px; }
+.stat-badge.correct { color:var(--correct); }
+.stat-badge.incorrect { color:var(--incorrect); }
+
+/* Filter bar */
+.filter-bar {
+  display:flex; gap:8px; overflow-x:auto; padding:8px 16px 12px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.filter-bar::-webkit-scrollbar { display:none; }
+.filter-chip {
+  flex-shrink:0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--surface2);
+  color: var(--text2);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.filter-chip.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.filter-chip:active { transform: scale(0.95); }
+
+/* Card area */
+.card-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px 100px;
+  min-height: calc(100vh - 180px);
+}
+
+/* Flip card */
+.card-container {
+  width: 100%;
+  max-width: 480px;
+  perspective: 1200px;
+  margin-bottom: 20px;
+}
+.card-flip {
+  position: relative;
+  width: 100%;
+  min-height: 380px;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+.card-flip.flipped { transform: rotateY(180deg); }
+
+.card-face {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  min-height: 320px;
+  max-height: 520px;
+  overflow-y: auto;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow);
+}
+.card-front {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.card-back {
+  background: var(--surface);
+  border: 1px solid rgba(74,106,223,0.2);
+  transform: rotateY(180deg);
+}
+body.dark .card-front {
+  background: linear-gradient(145deg, var(--surface), var(--surface2));
+}
+body.dark .card-back {
+  background: linear-gradient(145deg, #1e2235, #252a3e);
+  border-color: rgba(108,140,255,0.15);
+}
+
+.card-tag-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.card-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+.tag-skill { background: rgba(108,140,255,0.15); color: var(--accent); }
+.tag-subject { background: rgba(52,211,153,0.12); color: var(--correct); }
+.tag-source { background: rgba(251,191,36,0.12); color: var(--warning); }
+.tag-answer-o { background: rgba(52,211,153,0.18); color: var(--correct); }
+.tag-answer-x { background: rgba(248,113,113,0.18); color: var(--incorrect); }
+
+.card-label { font-size:11px; color:var(--text2); margin-bottom:6px; letter-spacing:0.04em; }
+.card-title { font-size:15px; font-weight:700; margin-bottom:16px; line-height:1.5; color:var(--text); }
+
+.card-question, .card-answer {
+  font-size: 15px;
+  line-height: 1.85;
+  color: var(--text);
+  flex: 1;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.card-question { font-weight: 400; }
+
+.card-hint {
+  margin-top: 16px;
+  font-size: 11px;
+  color: var(--text2);
+  text-align: center;
+  opacity: 0.7;
+}
+
+.card-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 4px;
+  letter-spacing: 0.06em;
+}
+.card-detail {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text2);
+  margin-bottom: 12px;
+}
+.card-detail:last-child { margin-bottom:0; }
+
+/* Buttons */
+.btn-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 480px;
+  margin-bottom: 12px;
+}
+.btn {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn:active { transform: scale(0.96); }
+.btn-correct { background: rgba(52,211,153,0.15); color: var(--correct); }
+.btn-incorrect { background: rgba(248,113,113,0.15); color: var(--incorrect); }
+.btn-skip { background: var(--surface2); color: var(--text2); }
+.btn-next { background: var(--accent); color: #fff; }
+.btn-review { background: rgba(251,191,36,0.15); color: var(--warning); }
+.btn-review.marked { background: var(--warning); color: #1a1d27; }
+
+.nav-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 480px;
+}
+.btn-nav {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-nav:active { transform: scale(0.96); }
+.btn-nav:disabled { opacity: 0.3; }
+
+/* Progress bar */
+.progress-bar {
+  width: 100%;
+  max-width: 480px;
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 2px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Modal / Settings */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal-sheet {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px 40px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 70vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.modal-handle {
+  width: 40px; height: 4px;
+  background: var(--surface3);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+.modal-title { font-size:16px; font-weight:700; margin-bottom:16px; }
+
+.filter-section { margin-bottom: 20px; }
+.filter-section-title { font-size:12px; color:var(--text2); margin-bottom:8px; font-weight:500; }
+.filter-options { display:flex; gap:6px; flex-wrap:wrap; }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text2);
+}
+.empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state .msg { font-size: 15px; line-height: 1.6; }
+
+/* Summary */
+.summary {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.summary-title { font-size: 20px; font-weight: 900; margin-bottom: 20px; }
+.summary-stats { display:flex; justify-content:center; gap:24px; margin-bottom:24px; }
+.summary-stat { text-align:center; }
+.summary-stat .num { font-size:32px; font-weight:900; }
+.summary-stat .label { font-size:11px; color:var(--text2); margin-top:4px; }
+.summary-stat.correct .num { color: var(--correct); }
+.summary-stat.incorrect .num { color: var(--incorrect); }
+
+.settings-btn {
+  background: none; border: none;
+  color: var(--text2); font-size: 20px;
+  cursor: pointer; padding: 4px;
+}
+
+/* Responsive tweaks */
+@media (min-width: 768px) {
+  .card-face { min-height: 360px; padding: 36px 32px; }
+  .card-question, .card-answer { font-size: 16px; }
+}
+
+/* Attempt history */
+.attempt-history {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  background: var(--surface2);
+  border-radius: 10px;
+}
+.attempt-dot {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--surface3);
+  color: var(--text2);
+  white-space: nowrap;
+}
+.attempt-count {
+  font-size: 10px;
+  color: var(--text2);
+  margin-left: auto;
+  font-weight: 500;
+}
+
+/* Memo */
+.memo-section {
+  margin-top: 14px;
+}
+
+/* SRS info */
+.srs-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: var(--surface2);
+  border-radius: 8px;
+  margin-bottom: 10px;
+  font-size: 11px;
+  color: var(--text2);
+}
+.srs-info.srs-due {
+  background: rgba(251,191,36,0.12);
+  color: var(--warning);
+  font-weight: 600;
+}
+.srs-label { font-weight: 500; }
+.srs-interval { opacity: 0.8; }
+
+.filter-chip.due {
+  background: rgba(251,191,36,0.18);
+  color: var(--warning);
+  border-color: var(--warning);
+  font-weight: 700;
+}
+.memo-input {
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface2);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.memo-input:focus {
+  border-color: var(--accent);
+}
+.memo-input::placeholder {
+  color: var(--text2);
+  opacity: 0.6;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="app-title">暗記カード<span>｜司法試験</span></div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="settings-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+      <button class="settings-btn" onclick="toggleFilterModal()">⚙️</button>
+      <button class="settings-btn" onclick="shuffleCards()">🔀</button>
+    </div>
+  </div>
+  <div class="stats-row">
+    <span class="stat-badge" id="statTotal">全 0 枚</span>
+    <span class="stat-badge correct" id="statCorrect">⭕ 0</span>
+    <span class="stat-badge incorrect" id="statIncorrect">❌ 0</span>
+    <span class="stat-badge" id="statPos">0 / 0</span>
+    <span class="stat-badge" id="statDue" style="color:var(--warning);">🔔 0</span>
+  </div>
+</div>
+
+<div class="filter-bar" id="filterBar"></div>
+<div class="filter-bar" id="subjectBar" style="display:none;"></div>
+
+<div class="card-area" id="cardArea"></div>
+
+<!-- Filter Modal -->
+<div class="modal-overlay" id="filterModal" onclick="closeFilterModal(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">フィルター設定</div>
+    <div class="filter-section">
+      <div class="filter-section-title">スキル</div>
+      <div class="filter-options" id="skillFilters"></div>
+    </div>
+    <div class="filter-section">
+      <div class="filter-section-title">科目</div>
+      <div class="filter-options" id="subjectFilters"></div>
+    </div>
+    <div class="filter-section">
+      <div class="filter-section-title">状態</div>
+      <div class="filter-options" id="statusFilters"></div>
+    </div>
+    <div style="margin-top:8px;">
+      <button class="btn btn-next" style="width:100%;" onclick="applyFilters();closeFilterModal();">適用する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====== CARD DATA ======
+var CARDS = [{"id": "001", "name": "民法-骨格-005｜制限行為能力取消しの模範骨格", "skill": "骨格マスター", "subject": "民法", "question": "制限行為能力に基づく取消しの骨格構造を示せ", "answer": "主体該当性→行為の瑕疵→結論の3層構造。取消権は行使要件の独立検討が不要", "source": "骨格マスター No.002", "statute": "民法5条1項・2項、120条1項", "trap": "", "correctAnswer": "", "checked": false}, {"id": "002", "name": "民法-骨格-004｜見出しから「要件」を削る理由", "skill": "骨格マスター", "subject": "民法", "question": "メインセクション見出しの「要件」は不要", "answer": "見出しは法的な問い。「要件」は作業予告なので削る", "source": "骨格マスター No.002", "statute": "民法5条2項", "trap": "", "correctAnswer": "", "checked": false}, {"id": "003", "name": "民法-骨格-003｜タイトルの法的根拠は「原因となる法制度」を書く", "skill": "骨格マスター", "subject": "民法", "question": "未成年者の売買契約取消しのタイトル設計", "answer": "「取消権に基づく」は循環、「法定代理権に基づく」は権限の説明。正解は「制限行為能力に基づく」", "source": "骨格マスター No.002", "statute": "民法5条2項", "trap": "", "correctAnswer": "", "checked": false}, {"id": "004", "name": "民法-条文-001｜1条2項（信義則）の3機能", "skill": "条文マスター", "subject": "民法", "question": "信義則が機能する典型的場面を3つ挙げよ", "answer": "信義則3機能＝①禁反言②付随義務の発生③事情変更の原則", "source": "条文マスター No.001", "statute": "民法1条2項", "trap": "", "correctAnswer": "", "checked": true}, {"id": "005", "name": "民法-条文-002｜1条3項（権利濫用）の判断基準", "skill": "条文マスター", "subject": "民法", "question": "権利濫用の判断基準（宇奈月温泉事件）を述べよ", "answer": "客観（利益衡量）＋主観（加害目的・害意）。効果は行使制限（権利自体は消滅しない）", "source": "条文マスター No.002", "statute": "民法1条3項", "trap": "", "correctAnswer": "", "checked": false}, {"id": "006", "name": "民法解釈-001 信義則（1条2項）の文言の意義", "skill": "解釈マスター", "subject": "民法", "question": "民法1条2項「信義に従い誠実に」の文言の意義と、一般条項としての機能・限界を説明せよ。", "answer": "「信義に従い誠実に」＝相手方の正当な信頼を裏切らないよう行動すべき一般条項。機能：制限・創設・補充。限界：補充性・最後の手段性。", "source": "", "statute": "民法1条2項", "trap": "", "correctAnswer": "", "checked": true}, {"id": "007", "name": "民法解釈-002 信義則（1条2項）の趣旨", "skill": "解釈マスター", "subject": "民法", "question": "信義則（1条2項）は、なぜ民法の冒頭に置かれているのか。私的自治の原則との関係で趣旨を説明せよ。", "answer": "私的自治が前提とする対等性・公正性が欠ける場合に、相手方の正当な信頼を保護し実質的正義を実現する基本原則。", "source": "", "statute": "民法1条2項", "trap": "", "correctAnswer": "", "checked": false}, {"id": "008", "name": "民法-趣旨-001｜私的自治の原則の趣旨", "skill": "趣旨マスター", "subject": "民法", "question": "私的自治の原則の趣旨は何か？なぜ民法は私人間の法律関係を当事者の意思に委ねるのか？", "answer": "私的自治の原則の趣旨は、個人の尊厳と自己決定の尊重にある（憲法13条）。契約自由の原則（521条）、物権変動の意思主義（176条）など全ての制度の出発点。", "source": "趣旨マスター No.001", "statute": "憲法13条、民法521条、522条", "trap": "", "correctAnswer": "", "checked": true}, {"id": "009", "name": "骨格-003｜貸金返還請求の骨格構造（発生→行使→結論）", "skill": "骨格マスター", "subject": "民法", "question": "AがBに500万円を貸し付け、弁済期到来後にBが返済しない場合の答案骨格は？", "answer": "貸金返還請求の骨格は「発生→行使→結論」の3層構造。(1)消費貸借契約の締結＝発生根拠、(2)弁済期の到来＝行使要件。", "source": "骨格マスター No.001 全体", "statute": "民法587条", "trap": "", "correctAnswer": "", "checked": false}, {"id": "010", "name": "骨格-002｜メインセクションは「成立」で問いを立てる", "skill": "骨格マスター", "subject": "民法", "question": "メインセクション（1.）の見出しは「要件の該当性」と「成立」のどちらが正しいか？", "answer": "「要件の該当性」は抽象的で何を検討するか見えない。「成立」という法的な問いを立てることで三段論法の入り口が自然に始まる。", "source": "骨格マスター No.001 STEP3", "statute": "民法587条", "trap": "", "correctAnswer": "", "checked": false}, {"id": "011", "name": "骨格-001｜タイトルに条文番号を書かない", "skill": "骨格マスター", "subject": "民法", "question": "答案のタイトル（第1）に条文番号（587条）を入れるのは正しいか？", "answer": "タイトルには条文番号ではなく法律構成の名称（消費貸借契約）を使う。条文番号は本文中の規範定立で初めて登場させる。", "source": "骨格マスター No.001 STEP2", "statute": "民法587条", "trap": "", "correctAnswer": "", "checked": false}, {"id": "012", "name": "見出し-民法-001 第1条の3つの項の区別（基本原則）", "skill": "見出しマスター", "subject": "民法", "question": "第1条には3つの項がある。それぞれの内容と、見出し名は何か？", "answer": "【第1条の見出し】基本原則（3つの項すべて共通） 第1項：私権は公共の福祉に適合しなければならない 第2項：信義誠実の原則（信義則） 第3項：権利濫用の禁止 ※通称と正式名称の区別に注意", "source": "", "statute": "民法第1条", "trap": "", "correctAnswer": "", "checked": true}, {"id": "013", "name": "見出し-民法-002 第1条第2項の見出しは？", "skill": "見出しマスター", "subject": "民法", "question": "信義則（第1条第2項）の正式な見出しは何か？答案での正しい摘示方法は？", "answer": "見出し：基本原則（「信義則」は通称であり見出しではない） 答案での摘示例：「第1条第2項（基本原則）に定める信義誠実の原則に照らし…」", "source": "", "statute": "民法第1条第2項", "trap": "", "correctAnswer": "", "checked": true}, {"id": "014", "name": "民法-要件-001｜貸金返還請求の請求原因の要件事実（587条）", "skill": "要件事実マスター", "subject": "民法", "question": "貸金返還請求の請求原因として主張すべき要件事実は？（民法587条）", "answer": "① 返還の合意 ② 金銭の交付 ③ 弁済期の到来 暗記フレーズ：「貸金＝①返還合意 ②金銭交付 ③弁済期到来」", "source": "", "statute": "民法587条", "trap": "", "correctAnswer": "", "checked": false}, {"id": "015", "name": "民法-要件-003｜「返済合意」ではなく「返還の合意」", "skill": "要件事実マスター", "subject": "民法", "question": "消費貸借の要件事実で、合意の部分は何と表現するか？", "answer": "「返還の合意」が正しい。「返済合意」は不正確。587条の文言は「返還をすることを約して」。", "source": "", "statute": "民法587条", "trap": "「返済」と「返還」を混同しやすい。条文の文言は「返還」。", "correctAnswer": "", "checked": true}, {"id": "016", "name": "民法-要件-002｜貸金返還請求の抗弁一覧", "skill": "要件事実マスター", "subject": "民法", "question": "貸金返還請求に対して被告が主張しうる抗弁をすべて挙げよ", "answer": "① 弁済の抗弁 ② 消滅時効の抗弁（166条1項） ③ 相殺の抗弁（505条） ④ 期限未到来の抗弁 ⑤ 同時履行の抗弁（533条）", "source": "", "statute": "民法473条, 166条1項, 505条, 533条", "trap": "", "correctAnswer": "", "checked": false}, {"id": "017", "name": "民法-三段-001｜同時履行の抗弁権（533条）の要件と趣旨", "skill": "三段論法マスター", "subject": "民法", "question": "同時履行の抗弁権（533条）の要件・趣旨・注意点は？", "answer": "【要件】①双務契約から生じた対価的債務が存在 ②相手方が履行を提供していない ③相手方の債務が弁済期にある（ただし書） 趣旨：双務契約の対価的牽連関係に基づく公平", "source": "三段論法マスター No.001", "statute": "民法533条", "trap": "①「履行していない」と「履行を提供していない」の区別 ②ただし書を忘れがち", "correctAnswer": "", "checked": false}, {"id": "018", "name": "条文解釈の問題提起の型（No.002）", "skill": "法律用語・言い回しマスター", "subject": "民法", "question": "条文の文言の意味が不明確で解釈が必要な場面で、問題提起をどう書くか？", "answer": "○○条の「△△」の意義が問題となる。カギ括弧は解釈が必要な文言だけを括る。「意義」という語が必須。", "source": "表現マスター No.002", "statute": "全条文共通", "trap": "①カギ括弧の範囲を広くしすぎない ②「意義」を入れ忘れる", "correctAnswer": "", "checked": false}, {"id": "019", "name": "民法-004 権利能力平等の原則とは？", "skill": "定義マスター", "subject": "民法", "question": "権利能力平等の原則の意義・根拠条文を述べよ", "answer": "すべての自然人は性別・年齢・職業・社会的身分等にかかわらず等しく権利能力を有する原則。3条1項が根拠。", "source": "", "statute": "民法3条1項", "trap": "3条の2（意思能力）との混同に注意。", "correctAnswer": "", "checked": false}, {"id": "020", "name": "R7予備 民法 第1問 肢ア", "skill": "短答マスター", "subject": "民法", "question": "意思表示の相手方が意思表示を受けた時点において保佐開始の審判を受けていたときであっても、表意者は、その意思表示をもってその相手方に対抗することができる。", "answer": "保佐人は受領能力制限対象外。制限されるのは意思能力を有しない者と未成年者のみ。", "source": "R7予備 民法 第1問肢ア", "statute": "民法98条の2", "trap": "", "correctAnswer": "○（正しい）", "checked": false}, {"id": "021", "name": "R7予備 民法 第1問 肢イ", "skill": "短答マスター", "subject": "民法", "question": "意思表示の相手方が意思表示を受けた時点において未成年者であったときでも、その法定代理人がその意思表示を知った後は、表意者は、その意思表示をもってその相手方に対抗することができる。", "answer": "未成年者は受領能力制限あり。法定代理人が知った後は対抗可能。", "source": "R7予備 民法 第1問肢イ", "statute": "民法98条の2", "trap": "", "correctAnswer": "○（正しい）", "checked": false}, {"id": "022", "name": "R7予備 民法 第1問 肢ウ", "skill": "短答マスター", "subject": "民法", "question": "債権譲渡通知は、債権の譲渡人が債務者の所在を知ることができないときであっても、公示の方法によってすることができない。", "answer": "公示による意思表示は可能。98条は債権譲渡通知にも適用可。", "source": "R7予備 民法 第1問肢ウ", "statute": "民法98条", "trap": "", "correctAnswer": "×（誤り）", "checked": false}, {"id": "023", "name": "R7予備 民法 第1問 肢エ", "skill": "短答マスター", "subject": "民法", "question": "解除の意思表示を含む内容証明郵便が留置期間内に容易に受領できたときは、推知できなくても到達したものと認められる。", "answer": "判例は容易に受領できたなら到達を認める。「推知できなかった」条件を加えても到達が認められる。", "source": "R7予備 民法 第1問肢エ", "statute": "民法97条1項、最判H10.6.11", "trap": "「推知できなかった」条件のすり替え", "correctAnswer": "×（誤り）", "checked": false}, {"id": "024", "name": "R7予備 民法 第1問 肢オ", "skill": "短答マスター", "subject": "民法", "question": "意思表示の相手方が正当な理由なく到達を妨げたときは、妨げた時に到達したとみなされる。", "answer": "「妨げた時」ではなく「通常到達すべきであった時」に到達したとみなす。", "source": "R7予備 民法 第1問肢オ", "statute": "民法97条2項", "trap": "「妨げた時」と「通常到達すべきであった時」のすり替え", "correctAnswer": "×（誤り）", "checked": false}, {"id": "025", "name": "R7予備 民法 第2問 肢ア", "skill": "短答マスター", "subject": "民法", "question": "Ａがした契約をＢが追認しない間は、Ｃは、その契約を取り消すことができる。", "answer": "無権代理の相手方は本人が追認しない間取消可能。", "source": "R7予備 民法 第2問肢ア", "statute": "民法115条", "trap": "", "correctAnswer": "○（正しい）", "checked": false}, {"id": "026", "name": "R7予備 民法 第2問 肢イ", "skill": "短答マスター", "subject": "民法", "question": "Ｂが期間内に確答をしないときは、契約を追認したものとみなされる。", "answer": "確答しない場合は追認拒絶とみなされる。追認したとみなされるのではない。", "source": "R7予備 民法 第2問肢イ", "statute": "民法114条", "trap": "", "correctAnswer": "×（誤り）", "checked": false}, {"id": "027", "name": "R7予備 民法 第2問 肢ウ", "skill": "短答マスター", "subject": "民法", "question": "ＣがＡに代理権がなかったことを過失によって知らなかったときは、Ａは無権代理人の責任を負わない。", "answer": "Aは代理権がないことを知っていたので、Cに過失があっても責任を免れない。", "source": "R7予備 民法 第2問肢ウ", "statute": "民法117条", "trap": "", "correctAnswer": "×（誤り）", "checked": false}, {"id": "028", "name": "R7予備 民法 第2問 肢エ", "skill": "短答マスター", "subject": "民法", "question": "Ｂが追認を拒絶した後ＡがＢを相続しても、契約は有効にならない。", "answer": "追認拒絶後の相続では契約は有効にならない（最判H10.7.17）。", "source": "R7予備 民法 第2問肢エ", "statute": "民法113条・116条、最判H10.7.17", "trap": "", "correctAnswer": "○（正しい）", "checked": false}, {"id": "029", "name": "R7予備 民法 第2問 肢オ", "skill": "短答マスター", "subject": "民法", "question": "無権代理人Ａは履行に代えて損害賠償をすることができる。", "answer": "相手方Cに選択権がある。無権代理人Aが勝手に損害賠償を選ぶことはできない。", "source": "R7予備 民法 第2問肢オ", "statute": "民法117条", "trap": "", "correctAnswer": "×（誤り）", "checked": false}, {"id": "030", "name": "R7予備 民法 第3問 肢ア", "skill": "短答マスター", "subject": "民法", "question": "後順位抵当権者は先順位抵当権の被担保債権の消滅時効を援用できない。", "answer": "", "source": "R7予備 民法 第3問肢ア", "statute": "民法145条、最判H11.10.21", "trap": "", "correctAnswer": "○（正しい）", "checked": false}, {"id": "031", "name": "R7予備 民法 第3問 肢イ", "skill": "短答マスター", "subject": "民法", "question": "消滅時効完成後に事実を知らず債務の承認をしても時効を援用できる。", "answer": "", "source": "R7予備 民法 第3問肢イ", "statute": "最判S41.4.20", "trap": "", "correctAnswer": "×（誤り）", "checked": false}, {"id": "032", "name": "R7予備 民法 第3問 肢ウ", "skill": "短答マスター", "subject": "民法", "question": "抵当不動産の第三取得者は被担保債権の消滅時効を援用できる。", "answer": "", "source": "R7予備 民法 第3問肢ウ", "statute": "民法145条", "trap": "", "correctAnswer": "○（正しい）", "checked": false}, {"id": "033", "name": "R7予備 民法 第3問 肢エ", "skill": "短答マスター", "subject": "民法", "question": "充当指定なく全債務完済に足りない弁済をしたときは各元本債務の承認に当たる。", "answer": "", "source": "R7予備 民法 第3問肢エ", "statute": "最判S25.10.10", "trap": "", "correctAnswer": "○（正しい）", "checked": false}, {"id": "034", "name": "R7予備 民法 第3問 肢オ", "skill": "短答マスター", "subject": "民法", "question": "自己の所有物については取得時効を援用できない。", "answer": "", "source": "R7予備 民法 第3問肢オ", "statute": "最判S42.7.21", "trap": "", "correctAnswer": "×（誤り）", "checked": false}, {"id": "035", "name": "R7予備 民法 第4問 肢ア", "skill": "短答マスター", "subject": "民法", "question": "Bの取得時効の期間はCが登記を備えた時から起算する。", "answer": "", "source": "R7予備 民法 第4問肢ア", "statute": "民法162条", "trap": "", "correctAnswer": "×（誤り）", "checked": false}, {"id": "036", "name": "R7予備 民法 第4問 肢イ", "skill": "短答マスター", "subject": "民法", "question": "入会権の取得は登記なしで第三者に対抗できる。", "answer": "", "source": "R7予備 民法 第4問肢イ", "statute": "民法263条・294条", "trap": "", "correctAnswer": "×（誤り）", "checked": false}, {"id": "037", "name": "R7予備 民法 第4問 肢ウ", "skill": "短答マスター", "subject": "民法", "question": "不動産質権の設定は引渡しがあっても登記なしで第三者に対抗できない。", "answer": "", "source": "R7予備 民法 第4問肢ウ", "statute": "民法361条", "trap": "", "correctAnswer": "×（誤り）", "checked": false}, {"id": "038", "name": "R7予備 民法 第4問 肢エ", "skill": "短答マスター", "subject": "民法", "question": "転抵当権の設定をCに通知せずCが承諾しなかったときCはDの同意なく弁済をDに対抗できる。", "answer": "", "source": "R7予備 民法 第4問肢エ", "statute": "民法376条・377条", "trap": "", "correctAnswer": "×（誤り）", "checked": false}, {"id": "039", "name": "R7予備 民法 第4問 肢オ", "skill": "短答マスター", "subject": "民法", "question": "AがBに売却後A死亡、相続人CがDに売却。Bは登記なしでDに対抗できる。", "answer": "", "source": "R7予備 民法 第4問肢オ", "statute": "民法177条、最判S33.10.14", "trap": "", "correctAnswer": "×（誤り）", "checked": false}, {"id": "040", "name": "R7予備 民法 第5問 肢ア", "skill": "短答マスター", "subject": "民法", "question": "AがAB共有甲土地の管理費用を支払い後Bが持分をCに譲渡。AはCに費用償還を求められる。", "answer": "", "source": "R7予備 民法 第5問肢ア", "statute": "民法253条・254条", "trap": "", "correctAnswer": "○（正しい）", "checked": false}, {"id": "041", "name": "R7予備 民法 第5問 肢イ", "skill": "短答マスター", "subject": "民法", "question": "Aは不法占有するDに対し単独で全部の明渡しを求められない。", "answer": "", "source": "R7予備 民法 第5問肢イ", "statute": "民法252条ただし書", "trap": "", "correctAnswer": "×（誤り）", "checked": false}, {"id": "042", "name": "R7予備 民法 第5問 肢ウ", "skill": "短答マスター", "subject": "民法", "question": "Aの債権者Eは自己の費用で甲土地の分割に参加できる。", "answer": "", "source": "R7予備 民法 第5問肢ウ", "statute": "民法260条", "trap": "", "correctAnswer": "○（正しい）", "checked": false}, {"id": "043", "name": "R7予備 民法 第5問 肢エ", "skill": "短答マスター", "subject": "民法", "question": "Bが甲土地を単独使用する場合、別段の合意がなければ持分超過使用の対価償還義務を負わない。", "answer": "", "source": "R7予備 民法 第5問肢エ", "statute": "民法249条", "trap": "", "correctAnswer": "×（誤り）", "checked": false}, {"id": "044", "name": "R7予備 民法 第5問 肢オ", "skill": "短答マスター", "subject": "民法", "question": "Aが死亡し相続人がないときはAの持分は国庫に帰属する。", "answer": "", "source": "R7予備 民法 第5問肢オ", "statute": "民法255条", "trap": "", "correctAnswer": "×（誤り）", "checked": false}, {"id": "045", "name": "R7予備 民法 第6問 肢ア", "skill": "短答マスター", "subject": "民法", "question": "建物所有目的で賃貸された土地に築造された建物について抵当権が設定されたときは、敷地の賃借権に及ぶ。", "answer": "賃借地上の建物に抵当権 → 敷地賃借権にも効力が及ぶ。借地権は建物の従たる権利。", "source": "R7予備 民法 第6問肢ア", "statute": "民法370条、87条2項類推、最判昭40.5.4", "trap": "", "correctAnswer": "○（正しい）", "checked": false}];
+
+// ====== SRS (Spaced Repetition) ======
+var SRS_INTERVALS = [1, 3, 7, 14, 30, 60];
+
+function getToday() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function addDays(dateStr, days) {
+  var parts = dateStr.split('-');
+  var d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+  d.setDate(d.getDate() + days);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function isDueToday(cardId) {
+  var s = state.srs[cardId];
+  if (!s) return false;
+  return s.nextReview <= getToday();
+}
+function getDueCount(skillFilter) {
+  var today = getToday();
+  var count = 0;
+  for (var i = 0; i < CARDS.length; i++) {
+    if (!CARDS[i].question) continue;
+    if (skillFilter && skillFilter !== 'all' && CARDS[i].skill !== skillFilter) continue;
+    var s = state.srs[CARDS[i].id];
+    if (s && s.nextReview <= today) count++;
+  }
+  return count;
+}
+function getSrsLabel(cardId) {
+  var s = state.srs[cardId];
+  if (!s) return '';
+  var days = SRS_INTERVALS[s.level] || 60;
+  var labels = ['1d','3d','7d','14d','30d','60d'];
+  return labels[s.level] || '60d+';
+}
+
+// ====== STATE ======
+var state = {
+  filtered: [],
+  current: 0,
+  flipped: false,
+  results: {},
+  history: {},
+  memos: {},
+  srs: {},
+  reviewMarked: {},
+  filterSkill: 'all',
+  filterSubject: 'all',
+  filterStatus: 'all',
+  completed: false
+};
+
+// ====== SKILLS & SUBJECTS ======
+var SKILLS = [];
+var SUBJECTS = [];
+(function() {
+  var sk = {}, su = {};
+  for (var i = 0; i < CARDS.length; i++) {
+    if (CARDS[i].skill) sk[CARDS[i].skill] = true;
+    if (CARDS[i].subject) su[CARDS[i].subject] = true;
+  }
+  for (var k in sk) SKILLS.push(k);
+  for (var k in su) SUBJECTS.push(k);
+  SKILLS.sort();
+  SUBJECTS.sort();
+})();
+
+// ====== THEME ======
+function toggleTheme() {
+  var isDark = document.body.classList.toggle('dark');
+  document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+  try { localStorage.setItem('ankicard_theme', isDark ? 'dark' : 'light'); } catch(e) {}
+}
+function initTheme() {
+  try {
+    var saved = localStorage.getItem('ankicard_theme');
+    if (saved === 'dark') {
+      document.body.classList.add('dark');
+      document.getElementById('themeBtn').textContent = '☀️';
+    }
+  } catch(e) {}
+}
+
+// ====== INIT ======
+function init() {
+  initTheme();
+  loadState();
+  buildFilterBar();
+  buildFilterModal();
+  applyFilters();
+}
+
+function loadState() {
+  try {
+    localStorage.setItem('_test', '1');
+    localStorage.removeItem('_test');
+    state.canSave = true;
+  } catch(e) {
+    state.canSave = false;
+  }
+  if (state.canSave) {
+    try {
+      var saved = localStorage.getItem('ankicard_state');
+      if (saved) {
+        var s = JSON.parse(saved);
+        if (s.results) state.results = s.results;
+        if (s.reviewMarked) state.reviewMarked = s.reviewMarked;
+        if (s.history) state.history = s.history;
+        if (s.memos) state.memos = s.memos;
+        if (s.srs) state.srs = s.srs;
+      }
+    } catch(e) {}
+  }
+  if (!state.canSave) {
+    setTimeout(function() {
+      var banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:300;background:#d97706;color:#1a1d27;text-align:center;padding:10px 16px;font-size:13px;font-weight:600;';
+      banner.textContent = '\u26a0 \u30d7\u30ec\u30d3\u30e5\u30fc\u74b0\u5883\u306e\u305f\u3081\u4fdd\u5b58\u3067\u304d\u307e\u305b\u3093\u3002\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9\u3057\u3066Safari\u3067\u958b\u3044\u3066\u304f\u3060\u3055\u3044\u3002';
+      document.body.appendChild(banner);
+    }, 500);
+  }
+}
+
+function saveState() {
+  if (!state.canSave) return;
+  try {
+    localStorage.setItem('ankicard_state', JSON.stringify({
+      results: state.results,
+      reviewMarked: state.reviewMarked,
+      history: state.history,
+      memos: state.memos,
+      srs: state.srs
+    }));
+  } catch(e) {}
+}
+
+// ====== FILTER BAR (quick) ======
+function buildFilterBar() {
+  var bar = document.getElementById('filterBar');
+  var dueAll = getDueCount('all');
+  var chips = [
+    { label: '全て', value: 'all' },
+    { label: '今日の復習' + (dueAll > 0 ? ' ' + dueAll : ''), value: 'due_today' },
+    { label: '間違いのみ', value: 'wrong_only' },
+    { label: '要復習', value: 'review' }
+  ];
+  for (var i = 0; i < SKILLS.length; i++) {
+    var short = SKILLS[i].replace('マスター','');
+    chips.push({ label: short, value: SKILLS[i] });
+  }
+  var html = '';
+  for (var i = 0; i < chips.length; i++) {
+    var active = (i === 0) ? ' active' : '';
+    var cls = 'filter-chip' + active;
+    if (chips[i].value === 'due_today' && dueAll > 0) cls += ' due';
+    html += '<button class="' + cls + '" data-filter="' + chips[i].value + '" onclick="quickFilter(this)">' + chips[i].label + '</button>';
+  }
+  bar.innerHTML = html;
+}
+
+function quickFilter(el) {
+  var bar = document.getElementById('filterBar');
+  var chips = bar.querySelectorAll('.filter-chip');
+  for (var i = 0; i < chips.length; i++) chips[i].classList.remove('active');
+  el.classList.add('active');
+  var val = el.getAttribute('data-filter');
+  state.filterSubject = 'all';
+  if (val === 'all') {
+    state.filterSkill = 'all';
+    state.filterStatus = 'all';
+  } else if (val === 'review') {
+    state.filterSkill = 'all';
+    state.filterStatus = 'review';
+  } else if (val === 'due_today') {
+    state.filterSkill = 'all';
+    state.filterStatus = 'due_today';
+  } else if (val === 'wrong_only') {
+    state.filterSkill = 'all';
+    state.filterStatus = 'wrong_only';
+  } else {
+    state.filterSkill = val;
+    state.filterStatus = 'all';
+  }
+  buildSubjectBar();
+  applyFilters();
+}
+
+function getSubjectsForSkill(skill) {
+  var subs = {};
+  for (var i = 0; i < CARDS.length; i++) {
+    if (!CARDS[i].question) continue;
+    if (skill !== 'all' && CARDS[i].skill !== skill) continue;
+    if (CARDS[i].subject) subs[CARDS[i].subject] = (subs[CARDS[i].subject] || 0) + 1;
+  }
+  return subs;
+}
+
+function buildSubjectBar() {
+  var bar = document.getElementById('subjectBar');
+  // Show subject bar for skill-specific or status-specific filters
+  if (state.filterSkill === 'all' && state.filterStatus === 'all') {
+    bar.style.display = 'none';
+    return;
+  }
+  var subs = {};
+  for (var i = 0; i < CARDS.length; i++) {
+    var c = CARDS[i];
+    if (!c.question) continue;
+    if (state.filterSkill !== 'all' && c.skill !== state.filterSkill) continue;
+    if (state.filterStatus === 'review' && !c.checked && !state.reviewMarked[c.id]) continue;
+    if (state.filterStatus === 'due_today') {
+      var s = state.srs[c.id];
+      if (!s || s.nextReview > getToday()) continue;
+    }
+    if (state.filterStatus === 'wrong_only' && state.results[c.id] !== 'incorrect') continue;
+    if (c.subject) subs[c.subject] = (subs[c.subject] || 0) + 1;
+  }
+  var keys = Object.keys(subs).sort();
+  if (keys.length <= 1) {
+    bar.style.display = 'none';
+    return;
+  }
+  var total = 0;
+  for (var i = 0; i < keys.length; i++) total += subs[keys[i]];
+  var html = '<button class="filter-chip active" onclick="subjectFilter(this,\'all\')">全科目 <small style="opacity:0.6">' + total + '</small></button>';
+  for (var i = 0; i < keys.length; i++) {
+    html += '<button class="filter-chip" onclick="subjectFilter(this,\'' + keys[i] + '\')">' + keys[i] + ' <small style="opacity:0.6">' + subs[keys[i]] + '</small></button>';
+  }
+  bar.innerHTML = html;
+  bar.style.display = 'flex';
+}
+
+function subjectFilter(el, val) {
+  var bar = document.getElementById('subjectBar');
+  var chips = bar.querySelectorAll('.filter-chip');
+  for (var i = 0; i < chips.length; i++) chips[i].classList.remove('active');
+  el.classList.add('active');
+  state.filterSubject = val;
+  applyFilters();
+}
+
+// ====== FILTER MODAL ======
+function buildFilterModal() {
+  // Skills
+  var skillHtml = '<button class="filter-chip active" data-val="all" onclick="toggleModalFilter(this,\'skill\')">全て</button>';
+  for (var i = 0; i < SKILLS.length; i++) {
+    skillHtml += '<button class="filter-chip" data-val="' + SKILLS[i] + '" onclick="toggleModalFilter(this,\'skill\')">' + SKILLS[i].replace('マスター','') + '</button>';
+  }
+  document.getElementById('skillFilters').innerHTML = skillHtml;
+
+  // Subjects
+  var subHtml = '<button class="filter-chip active" data-val="all" onclick="toggleModalFilter(this,\'subject\')">全て</button>';
+  for (var i = 0; i < SUBJECTS.length; i++) {
+    subHtml += '<button class="filter-chip" data-val="' + SUBJECTS[i] + '" onclick="toggleModalFilter(this,\'subject\')">' + SUBJECTS[i] + '</button>';
+  }
+  document.getElementById('subjectFilters').innerHTML = subHtml;
+
+  // Status
+  var statHtml = '<button class="filter-chip active" data-val="all" onclick="toggleModalFilter(this,\'status\')">全て</button>';
+  statHtml += '<button class="filter-chip" data-val="due_today" onclick="toggleModalFilter(this,\'status\')">今日の復習</button>';
+  statHtml += '<button class="filter-chip" data-val="wrong_only" onclick="toggleModalFilter(this,\'status\')">間違いのみ</button>';
+  statHtml += '<button class="filter-chip" data-val="review" onclick="toggleModalFilter(this,\'status\')">要復習</button>';
+  statHtml += '<button class="filter-chip" data-val="unanswered" onclick="toggleModalFilter(this,\'status\')">未回答</button>';
+  statHtml += '<button class="filter-chip" data-val="incorrect" onclick="toggleModalFilter(this,\'status\')">不正解のみ</button>';
+  document.getElementById('statusFilters').innerHTML = statHtml;
+}
+
+function toggleModalFilter(el, group) {
+  var parent = el.parentElement;
+  var chips = parent.querySelectorAll('.filter-chip');
+  for (var i = 0; i < chips.length; i++) chips[i].classList.remove('active');
+  el.classList.add('active');
+  var val = el.getAttribute('data-val');
+  if (group === 'skill') state.filterSkill = val;
+  if (group === 'subject') state.filterSubject = val;
+  if (group === 'status') state.filterStatus = val;
+}
+
+function toggleFilterModal() {
+  document.getElementById('filterModal').classList.toggle('show');
+}
+function closeFilterModal(e) {
+  if (!e || e.target === document.getElementById('filterModal')) {
+    document.getElementById('filterModal').classList.remove('show');
+  }
+}
+
+// ====== APPLY FILTERS ======
+function applyFilters() {
+  state.filtered = [];
+  var today = getToday();
+  for (var i = 0; i < CARDS.length; i++) {
+    var c = CARDS[i];
+    if (!c.question) continue;
+    if (state.filterSkill !== 'all' && c.skill !== state.filterSkill) continue;
+    if (state.filterSubject !== 'all' && c.subject !== state.filterSubject) continue;
+    if (state.filterStatus === 'review' && !c.checked && !state.reviewMarked[c.id]) continue;
+    if (state.filterStatus === 'unanswered' && state.results[c.id]) continue;
+    if (state.filterStatus === 'incorrect' && state.results[c.id] !== 'incorrect') continue;
+    if (state.filterStatus === 'due_today') {
+      var s = state.srs[c.id];
+      if (!s || s.nextReview > today) continue;
+    }
+    if (state.filterStatus === 'wrong_only') {
+      if (state.results[c.id] !== 'incorrect') continue;
+    }
+    state.filtered.push(c);
+  }
+  state.current = 0;
+  state.flipped = false;
+  state.completed = false;
+  updateStats();
+  renderCard();
+}
+
+// ====== SHUFFLE ======
+function shuffleCards() {
+  for (var i = state.filtered.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = state.filtered[i];
+    state.filtered[i] = state.filtered[j];
+    state.filtered[j] = tmp;
+  }
+  state.current = 0;
+  state.flipped = false;
+  state.completed = false;
+  renderCard();
+}
+
+// ====== STATS ======
+function updateStats() {
+  var total = state.filtered.length;
+  var correct = 0, incorrect = 0;
+  for (var i = 0; i < state.filtered.length; i++) {
+    var r = state.results[state.filtered[i].id];
+    if (r === 'correct') correct++;
+    if (r === 'incorrect') incorrect++;
+  }
+  var dueCount = getDueCount('all');
+  document.getElementById('statTotal').textContent = '全 ' + total + ' 枚';
+  document.getElementById('statCorrect').textContent = '\u2B55 ' + correct;
+  document.getElementById('statIncorrect').textContent = '\u274C ' + incorrect;
+  document.getElementById('statPos').textContent = (total > 0 ? (state.current + 1) : 0) + ' / ' + total;
+  var dueEl = document.getElementById('statDue');
+  if (dueEl) dueEl.textContent = '\uD83D\uDD14 ' + dueCount;
+}
+
+// ====== RENDER CARD ======
+function renderCard() {
+  var area = document.getElementById('cardArea');
+
+  if (state.filtered.length === 0) {
+    area.innerHTML = '<div class="empty-state"><div class="icon">📭</div><div class="msg">該当するカードがありません。<br>フィルターを変更してください。</div></div>';
+    return;
+  }
+
+  if (state.completed) {
+    renderSummary();
+    return;
+  }
+
+  var c = state.filtered[state.current];
+  var isMarked = c.checked || state.reviewMarked[c.id];
+  var isTanto = (c.correctAnswer !== '' && c.correctAnswer != null);
+
+  var progress = ((state.current) / state.filtered.length * 100);
+
+  var html = '';
+  html += '<div class="progress-bar"><div class="progress-fill" style="width:' + progress + '%"></div></div>';
+
+  html += '<div class="card-container"><div class="card-flip" id="cardFlip" onclick="flipCard()">';
+
+  // Front
+  html += '<div class="card-face card-front">';
+  html += '<div class="card-tag-row">';
+  html += '<span class="card-tag tag-skill">' + esc(c.skill || '') + '</span>';
+  html += '<span class="card-tag tag-subject">' + esc(c.subject || '') + '</span>';
+  if (c.source) html += '<span class="card-tag tag-source">' + esc(c.source) + '</span>';
+  if (isTanto) {
+    var isO = c.correctAnswer.indexOf('\u25CB') >= 0 || c.correctAnswer.indexOf('\u6B63') >= 0;
+    html += '<span class="card-tag ' + (isO ? 'tag-answer-o' : 'tag-answer-x') + '">' + esc(c.correctAnswer) + '</span>';
+  }
+  html += '</div>';
+  // Attempt history
+  var hist = state.history[c.id];
+  if (hist && hist.length > 0) {
+    html += '<div class="attempt-history">';
+    var maxShow = 8;
+    var start = hist.length > maxShow ? hist.length - maxShow : 0;
+    for (var h = start; h < hist.length; h++) {
+      var icon = hist[h].result === 'correct' ? '\u2B55' : '\u274C';
+      html += '<span class="attempt-dot" title="' + esc(hist[h].date) + '">' + (h - start + 1 + start) + '回' + icon + '</span>';
+    }
+    html += '<span class="attempt-count">計' + hist.length + '回</span>';
+    html += '</div>';
+  }
+  // SRS info
+  var srsInfo = state.srs[c.id];
+  if (srsInfo) {
+    var dueToday = srsInfo.nextReview <= getToday();
+    html += '<div class="srs-info' + (dueToday ? ' srs-due' : '') + '">';
+    html += '<span class="srs-label">' + (dueToday ? '🔔 復習日です' : '📅 次回: ' + srsInfo.nextReview) + '</span>';
+    html += '<span class="srs-interval">間隔: ' + SRS_INTERVALS[srsInfo.level] + '日</span>';
+    html += '</div>';
+  }
+  html += '<div class="card-label">QUESTION</div>';
+  html += '<div class="card-question">' + esc(c.question).replace(/\n/g, '<br>') + '</div>';
+  html += '<div class="card-hint">タップで解答を表示</div>';
+  html += '</div>';
+
+  // Back
+  html += '<div class="card-face card-back">';
+  html += '<div class="card-tag-row">';
+  html += '<span class="card-tag tag-skill">' + esc(c.skill || '') + '</span>';
+  html += '<span class="card-tag tag-subject">' + esc(c.subject || '') + '</span>';
+  html += '</div>';
+  html += '<div class="card-section-label">ANSWER</div>';
+  html += '<div class="card-question">' + esc(c.answer || '（解説なし）').replace(/\n/g, '<br>') + '</div>';
+  if (c.statute) {
+    html += '<div class="card-section-label" style="margin-top:14px;">根拠条文</div>';
+    html += '<div class="card-detail">' + esc(c.statute) + '</div>';
+  }
+  if (c.trap) {
+    html += '<div class="card-section-label">ひっかけポイント</div>';
+    html += '<div class="card-detail" style="color:var(--warning);">' + esc(c.trap) + '</div>';
+  }
+  // Memo
+  var memoVal = state.memos[c.id] || '';
+  html += '<div class="memo-section" onclick="event.stopPropagation()">';
+  html += '<div class="card-section-label" style="margin-top:14px;">📝 メモ</div>';
+  html += '<textarea class="memo-input" id="memoInput" placeholder="覚え方・気づき・注意点など自由に…" onclick="event.stopPropagation()" onblur="saveMemo()">' + esc(memoVal) + '</textarea>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '</div></div>';
+
+  // Buttons
+  html += '<div class="btn-row">';
+  html += '<button class="btn btn-correct" onclick="markResult(\'correct\')">⭕ 正解</button>';
+  html += '<button class="btn btn-incorrect" onclick="markResult(\'incorrect\')">❌ 不正解</button>';
+  html += '</div>';
+
+  html += '<div class="btn-row">';
+  html += '<button class="btn btn-review' + (isMarked ? ' marked' : '') + '" onclick="toggleReview()">🔖 ' + (isMarked ? '復習済み' : '要復習') + '</button>';
+  html += '<button class="btn btn-skip" onclick="nextCard()">スキップ →</button>';
+  html += '</div>';
+
+  html += '<div class="nav-row">';
+  html += '<button class="btn-nav" onclick="prevCard()"' + (state.current <= 0 ? ' disabled' : '') + '>← 前へ</button>';
+  html += '<button class="btn-nav" onclick="nextCard()"' + (state.current >= state.filtered.length - 1 ? ' disabled' : '') + '>次へ →</button>';
+  html += '</div>';
+
+  area.innerHTML = html;
+  updateStats();
+}
+
+function renderSummary() {
+  var area = document.getElementById('cardArea');
+  var correct = 0, incorrect = 0, skipped = 0;
+  for (var i = 0; i < state.filtered.length; i++) {
+    var r = state.results[state.filtered[i].id];
+    if (r === 'correct') correct++;
+    else if (r === 'incorrect') incorrect++;
+    else skipped++;
+  }
+  var total = state.filtered.length;
+  var pct = total > 0 ? Math.round(correct / total * 100) : 0;
+
+  var html = '<div class="summary">';
+  html += '<div class="summary-title">セッション完了！</div>';
+  html += '<div class="summary-stats">';
+  html += '<div class="summary-stat correct"><div class="num">' + correct + '</div><div class="label">正解</div></div>';
+  html += '<div class="summary-stat incorrect"><div class="num">' + incorrect + '</div><div class="label">不正解</div></div>';
+  html += '<div class="summary-stat"><div class="num">' + skipped + '</div><div class="label">未回答</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:48px;font-weight:900;margin-bottom:20px;color:' + (pct >= 80 ? 'var(--correct)' : pct >= 50 ? 'var(--warning)' : 'var(--incorrect)') + ';">' + pct + '%</div>';
+  html += '<div class="btn-row"><button class="btn btn-next" onclick="restart()">もう一度</button></div>';
+  html += '<div class="btn-row"><button class="btn btn-review" onclick="retryIncorrect()">不正解のみ再挑戦</button></div>';
+  html += '</div>';
+  area.innerHTML = html;
+}
+
+// ====== INTERACTIONS ======
+function flipCard() {
+  var el = document.getElementById('cardFlip');
+  if (el) {
+    state.flipped = !state.flipped;
+    if (state.flipped) el.classList.add('flipped');
+    else el.classList.remove('flipped');
+  }
+}
+
+function markResult(result) {
+  var c = state.filtered[state.current];
+  state.results[c.id] = result;
+  // Append to history
+  if (!state.history[c.id]) state.history[c.id] = [];
+  var today = getToday();
+  state.history[c.id].push({ date: today, result: result });
+  // SRS update
+  var cur = state.srs[c.id] || { level: 0, nextReview: today, lastReview: today };
+  if (result === 'correct') {
+    cur.level = Math.min(cur.level + 1, SRS_INTERVALS.length - 1);
+  } else {
+    cur.level = 0;
+  }
+  cur.lastReview = today;
+  cur.nextReview = addDays(today, SRS_INTERVALS[cur.level]);
+  state.srs[c.id] = cur;
+  saveState();
+  nextCard();
+}
+
+function toggleReview() {
+  var c = state.filtered[state.current];
+  if (state.reviewMarked[c.id]) {
+    delete state.reviewMarked[c.id];
+  } else {
+    state.reviewMarked[c.id] = true;
+  }
+  saveState();
+  renderCard();
+}
+
+function nextCard() {
+  if (state.current < state.filtered.length - 1) {
+    state.current++;
+    state.flipped = false;
+    renderCard();
+  } else {
+    state.completed = true;
+    renderCard();
+  }
+}
+
+function prevCard() {
+  if (state.current > 0) {
+    state.current--;
+    state.flipped = false;
+    renderCard();
+  }
+}
+
+function restart() {
+  state.current = 0;
+  state.flipped = false;
+  state.completed = false;
+  renderCard();
+}
+
+function retryIncorrect() {
+  var wrong = [];
+  for (var i = 0; i < state.filtered.length; i++) {
+    if (state.results[state.filtered[i].id] === 'incorrect') {
+      wrong.push(state.filtered[i]);
+    }
+  }
+  if (wrong.length === 0) {
+    alert('不正解のカードがありません。');
+    return;
+  }
+  state.filtered = wrong;
+  state.current = 0;
+  state.flipped = false;
+  state.completed = false;
+  updateStats();
+  renderCard();
+}
+
+function saveMemo() {
+  var c = state.filtered[state.current];
+  var el = document.getElementById('memoInput');
+  if (el) {
+    var val = el.value.trim();
+    if (val) {
+      state.memos[c.id] = val;
+    } else {
+      delete state.memos[c.id];
+    }
+    saveState();
+  }
+}
+
+function clearHistory(cardId) {
+  if (confirm('このカードの回答履歴をリセットしますか？')) {
+    delete state.history[cardId];
+    delete state.results[cardId];
+    saveState();
+    renderCard();
+  }
+}
+
+function esc(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Start
+init();
+</script>
+</body>
+</html>
