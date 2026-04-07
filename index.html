@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>æè¨ã«ã¼ãï½å¸æ³è©¦é¨å¯¾ç­</title>
+<title>暗記カード｜司法試験対策</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap');
 
@@ -436,19 +436,19 @@ body.dark .card-back {
 
 <div class="header">
   <div class="header-top">
-    <div class="app-title">æè¨ã«ã¼ã<span>ï½å¸æ³è©¦é¨</span></div>
+    <div class="app-title">暗記カード<span>｜司法試験</span></div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <button class="settings-btn" onclick="toggleTheme()" id="themeBtn">ð</button>
-      <button class="settings-btn" onclick="toggleFilterModal()">âï¸</button>
-      <button class="settings-btn" onclick="shuffleCards()">ð</button>
+      <button class="settings-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+      <button class="settings-btn" onclick="toggleFilterModal()">⚙️</button>
+      <button class="settings-btn" onclick="shuffleCards()">🔀</button>
     </div>
   </div>
   <div class="stats-row">
-    <span class="stat-badge" id="statTotal">å¨ 0 æ</span>
-    <span class="stat-badge correct" id="statCorrect">â­ 0</span>
-    <span class="stat-badge incorrect" id="statIncorrect">â 0</span>
+    <span class="stat-badge" id="statTotal">全 0 枚</span>
+    <span class="stat-badge correct" id="statCorrect">⭕ 0</span>
+    <span class="stat-badge incorrect" id="statIncorrect">❌ 0</span>
     <span class="stat-badge" id="statPos">0 / 0</span>
-    <span class="stat-badge" id="statDue" style="color:var(--warning);">ð 0</span>
+    <span class="stat-badge" id="statDue" style="color:var(--warning);">🔔 0</span>
   </div>
 </div>
 
@@ -461,21 +461,21 @@ body.dark .card-back {
 <div class="modal-overlay" id="filterModal" onclick="closeFilterModal(event)">
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
-    <div class="modal-title">ãã£ã«ã¿ã¼è¨­å®</div>
+    <div class="modal-title">フィルター設定</div>
     <div class="filter-section">
-      <div class="filter-section-title">ã¹ã­ã«</div>
+      <div class="filter-section-title">スキル</div>
       <div class="filter-options" id="skillFilters"></div>
     </div>
     <div class="filter-section">
-      <div class="filter-section-title">ç§ç®</div>
+      <div class="filter-section-title">科目</div>
       <div class="filter-options" id="subjectFilters"></div>
     </div>
     <div class="filter-section">
-      <div class="filter-section-title">ç¶æ</div>
+      <div class="filter-section-title">状態</div>
       <div class="filter-options" id="statusFilters"></div>
     </div>
     <div style="margin-top:8px;">
-      <button class="btn btn-next" style="width:100%;" onclick="applyFilters();closeFilterModal();">é©ç¨ãã</button>
+      <button class="btn btn-next" style="width:100%;" onclick="applyFilters();closeFilterModal();">適用する</button>
     </div>
   </div>
 </div>
@@ -1414,7 +1414,7 @@ var SUBJECTS = [];
 // ====== THEME ======
 function toggleTheme() {
   var isDark = document.body.classList.toggle('dark');
-  document.getElementById('themeBtn').textContent = isDark ? 'âï¸' : 'ð';
+  document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
   try { localStorage.setItem('ankicard_theme', isDark ? 'dark' : 'light'); } catch(e) {}
 }
 function initTheme() {
@@ -1422,7 +1422,7 @@ function initTheme() {
     var saved = localStorage.getItem('ankicard_theme');
     if (saved === 'dark') {
       document.body.classList.add('dark');
-      document.getElementById('themeBtn').textContent = 'âï¸';
+      document.getElementById('themeBtn').textContent = '☀️';
     }
   } catch(e) {}
 }
@@ -1485,13 +1485,13 @@ function buildFilterBar() {
   var bar = document.getElementById('filterBar');
   var dueAll = getDueCount('all');
   var chips = [
-    { label: 'å¨ã¦', value: 'all' },
-    { label: 'ä»æ¥ã®å¾©ç¿' + (dueAll > 0 ? ' ' + dueAll : ''), value: 'due_today' },
-    { label: 'ééãã®ã¿', value: 'wrong_only' },
-    { label: 'è¦å¾©ç¿', value: 'review' }
+    { label: '全て', value: 'all' },
+    { label: '今日の復習' + (dueAll > 0 ? ' ' + dueAll : ''), value: 'due_today' },
+    { label: '間違いのみ', value: 'wrong_only' },
+    { label: '要復習', value: 'review' }
   ];
   for (var i = 0; i < SKILLS.length; i++) {
-    var short = SKILLS[i].replace('ãã¹ã¿ã¼','');
+    var short = SKILLS[i].replace('マスター','');
     chips.push({ label: short, value: SKILLS[i] });
   }
   var html = '';
@@ -1568,7 +1568,7 @@ function buildSubjectBar() {
   }
   var total = 0;
   for (var i = 0; i < keys.length; i++) total += subs[keys[i]];
-  var html = '<button class="filter-chip active" onclick="subjectFilter(this,\'all\')">å¨ç§ç® <small style="opacity:0.6">' + total + '</small></button>';
+  var html = '<button class="filter-chip active" onclick="subjectFilter(this,\'all\')">全科目 <small style="opacity:0.6">' + total + '</small></button>';
   for (var i = 0; i < keys.length; i++) {
     html += '<button class="filter-chip" onclick="subjectFilter(this,\'' + keys[i] + '\')">' + keys[i] + ' <small style="opacity:0.6">' + subs[keys[i]] + '</small></button>';
   }
@@ -1588,26 +1588,26 @@ function subjectFilter(el, val) {
 // ====== FILTER MODAL ======
 function buildFilterModal() {
   // Skills
-  var skillHtml = '<button class="filter-chip active" data-val="all" onclick="toggleModalFilter(this,\'skill\')">å¨ã¦</button>';
+  var skillHtml = '<button class="filter-chip active" data-val="all" onclick="toggleModalFilter(this,\'skill\')">全て</button>';
   for (var i = 0; i < SKILLS.length; i++) {
-    skillHtml += '<button class="filter-chip" data-val="' + SKILLS[i] + '" onclick="toggleModalFilter(this,\'skill\')">' + SKILLS[i].replace('ãã¹ã¿ã¼','') + '</button>';
+    skillHtml += '<button class="filter-chip" data-val="' + SKILLS[i] + '" onclick="toggleModalFilter(this,\'skill\')">' + SKILLS[i].replace('マスター','') + '</button>';
   }
   document.getElementById('skillFilters').innerHTML = skillHtml;
 
   // Subjects
-  var subHtml = '<button class="filter-chip active" data-val="all" onclick="toggleModalFilter(this,\'subject\')">å¨ã¦</button>';
+  var subHtml = '<button class="filter-chip active" data-val="all" onclick="toggleModalFilter(this,\'subject\')">全て</button>';
   for (var i = 0; i < SUBJECTS.length; i++) {
     subHtml += '<button class="filter-chip" data-val="' + SUBJECTS[i] + '" onclick="toggleModalFilter(this,\'subject\')">' + SUBJECTS[i] + '</button>';
   }
   document.getElementById('subjectFilters').innerHTML = subHtml;
 
   // Status
-  var statHtml = '<button class="filter-chip active" data-val="all" onclick="toggleModalFilter(this,\'status\')">å¨ã¦</button>';
-  statHtml += '<button class="filter-chip" data-val="due_today" onclick="toggleModalFilter(this,\'status\')">ä»æ¥ã®å¾©ç¿</button>';
-  statHtml += '<button class="filter-chip" data-val="wrong_only" onclick="toggleModalFilter(this,\'status\')">ééãã®ã¿</button>';
-  statHtml += '<button class="filter-chip" data-val="review" onclick="toggleModalFilter(this,\'status\')">è¦å¾©ç¿</button>';
-  statHtml += '<button class="filter-chip" data-val="unanswered" onclick="toggleModalFilter(this,\'status\')">æªåç­</button>';
-  statHtml += '<button class="filter-chip" data-val="incorrect" onclick="toggleModalFilter(this,\'status\')">ä¸æ­£è§£ã®ã¿</button>';
+  var statHtml = '<button class="filter-chip active" data-val="all" onclick="toggleModalFilter(this,\'status\')">全て</button>';
+  statHtml += '<button class="filter-chip" data-val="due_today" onclick="toggleModalFilter(this,\'status\')">今日の復習</button>';
+  statHtml += '<button class="filter-chip" data-val="wrong_only" onclick="toggleModalFilter(this,\'status\')">間違いのみ</button>';
+  statHtml += '<button class="filter-chip" data-val="review" onclick="toggleModalFilter(this,\'status\')">要復習</button>';
+  statHtml += '<button class="filter-chip" data-val="unanswered" onclick="toggleModalFilter(this,\'status\')">未回答</button>';
+  statHtml += '<button class="filter-chip" data-val="incorrect" onclick="toggleModalFilter(this,\'status\')">不正解のみ</button>';
   document.getElementById('statusFilters').innerHTML = statHtml;
 }
 
@@ -1683,7 +1683,7 @@ function updateStats() {
     if (r === 'incorrect') incorrect++;
   }
   var dueCount = getDueCount('all');
-  document.getElementById('statTotal').textContent = 'å¨ ' + total + ' æ';
+  document.getElementById('statTotal').textContent = '全 ' + total + ' 枚';
   document.getElementById('statCorrect').textContent = '\u2B55 ' + correct;
   document.getElementById('statIncorrect').textContent = '\u274C ' + incorrect;
   document.getElementById('statPos').textContent = (total > 0 ? (state.current + 1) : 0) + ' / ' + total;
@@ -1696,7 +1696,7 @@ function renderCard() {
   var area = document.getElementById('cardArea');
 
   if (state.filtered.length === 0) {
-    area.innerHTML = '<div class="empty-state"><div class="icon">ð­</div><div class="msg">è©²å½ããã«ã¼ããããã¾ããã<br>ãã£ã«ã¿ã¼ãå¤æ´ãã¦ãã ããã</div></div>';
+    area.innerHTML = '<div class="empty-state"><div class="icon">📭</div><div class="msg">該当するカードがありません。<br>フィルターを変更してください。</div></div>';
     return;
   }
 
@@ -1735,9 +1735,9 @@ function renderCard() {
     var start = hist.length > maxShow ? hist.length - maxShow : 0;
     for (var h = start; h < hist.length; h++) {
       var icon = hist[h].result === 'correct' ? '\u2B55' : '\u274C';
-      html += '<span class="attempt-dot" title="' + esc(hist[h].date) + '">' + (h - start + 1 + start) + 'å' + icon + '</span>';
+      html += '<span class="attempt-dot" title="' + esc(hist[h].date) + '">' + (h - start + 1 + start) + '回' + icon + '</span>';
     }
-    html += '<span class="attempt-count">è¨' + hist.length + 'å</span>';
+    html += '<span class="attempt-count">計' + hist.length + '回</span>';
     html += '</div>';
   }
   // SRS info
@@ -1745,13 +1745,13 @@ function renderCard() {
   if (srsInfo) {
     var dueToday = srsInfo.nextReview <= getToday();
     html += '<div class="srs-info' + (dueToday ? ' srs-due' : '') + '">';
-    html += '<span class="srs-label">' + (dueToday ? 'ð å¾©ç¿æ¥ã§ã' : 'ð æ¬¡å: ' + srsInfo.nextReview) + '</span>';
-    html += '<span class="srs-interval">éé: ' + SRS_INTERVALS[srsInfo.level] + 'æ¥</span>';
+    html += '<span class="srs-label">' + (dueToday ? '🔔 復習日です' : '📅 次回: ' + srsInfo.nextReview) + '</span>';
+    html += '<span class="srs-interval">間隔: ' + SRS_INTERVALS[srsInfo.level] + '日</span>';
     html += '</div>';
   }
   html += '<div class="card-label">QUESTION</div>';
   html += '<div class="card-question">' + esc(c.question).replace(/\n/g, '<br>') + '</div>';
-  html += '<div class="card-hint">ã¿ããã§è§£ç­ãè¡¨ç¤º</div>';
+  html += '<div class="card-hint">タップで解答を表示</div>';
   html += '</div>';
 
   // Back
@@ -1761,20 +1761,20 @@ function renderCard() {
   html += '<span class="card-tag tag-subject">' + esc(c.subject || '') + '</span>';
   html += '</div>';
   html += '<div class="card-section-label">ANSWER</div>';
-  html += '<div class="card-question">' + esc(c.answer || 'ï¼è§£èª¬ãªãï¼').replace(/\n/g, '<br>') + '</div>';
+  html += '<div class="card-question">' + esc(c.answer || '（解説なし）').replace(/\n/g, '<br>') + '</div>';
   if (c.statute) {
-    html += '<div class="card-section-label" style="margin-top:14px;">æ ¹æ æ¡æ</div>';
+    html += '<div class="card-section-label" style="margin-top:14px;">根拠条文</div>';
     html += '<div class="card-detail">' + esc(c.statute) + '</div>';
   }
   if (c.trap) {
-    html += '<div class="card-section-label">ã²ã£ãããã¤ã³ã</div>';
+    html += '<div class="card-section-label">ひっかけポイント</div>';
     html += '<div class="card-detail" style="color:var(--warning);">' + esc(c.trap) + '</div>';
   }
   // Memo
   var memoVal = state.memos[c.id] || '';
   html += '<div class="memo-section" onclick="event.stopPropagation()">';
-  html += '<div class="card-section-label" style="margin-top:14px;">ð ã¡ã¢</div>';
-  html += '<textarea class="memo-input" id="memoInput" placeholder="è¦ãæ¹ã»æ°ã¥ãã»æ³¨æç¹ãªã©èªç±ã«â¦" onclick="event.stopPropagation()" onblur="saveMemo()">' + esc(memoVal) + '</textarea>';
+  html += '<div class="card-section-label" style="margin-top:14px;">📝 メモ</div>';
+  html += '<textarea class="memo-input" id="memoInput" placeholder="覚え方・気づき・注意点など自由に…" onclick="event.stopPropagation()" onblur="saveMemo()">' + esc(memoVal) + '</textarea>';
   html += '</div>';
   html += '</div>';
 
@@ -1782,18 +1782,18 @@ function renderCard() {
 
   // Buttons
   html += '<div class="btn-row">';
-  html += '<button class="btn btn-correct" onclick="markResult(\'correct\')">â­ æ­£è§£</button>';
-  html += '<button class="btn btn-incorrect" onclick="markResult(\'incorrect\')">â ä¸æ­£è§£</button>';
+  html += '<button class="btn btn-correct" onclick="markResult(\'correct\')">⭕ 正解</button>';
+  html += '<button class="btn btn-incorrect" onclick="markResult(\'incorrect\')">❌ 不正解</button>';
   html += '</div>';
 
   html += '<div class="btn-row">';
-  html += '<button class="btn btn-review' + (isMarked ? ' marked' : '') + '" onclick="toggleReview()">ð ' + (isMarked ? 'å¾©ç¿æ¸ã¿' : 'è¦å¾©ç¿') + '</button>';
-  html += '<button class="btn btn-skip" onclick="nextCard()">ã¹ã­ãã â</button>';
+  html += '<button class="btn btn-review' + (isMarked ? ' marked' : '') + '" onclick="toggleReview()">🔖 ' + (isMarked ? '復習済み' : '要復習') + '</button>';
+  html += '<button class="btn btn-skip" onclick="nextCard()">スキップ →</button>';
   html += '</div>';
 
   html += '<div class="nav-row">';
-  html += '<button class="btn-nav" onclick="prevCard()"' + (state.current <= 0 ? ' disabled' : '') + '>â åã¸</button>';
-  html += '<button class="btn-nav" onclick="nextCard()"' + (state.current >= state.filtered.length - 1 ? ' disabled' : '') + '>æ¬¡ã¸ â</button>';
+  html += '<button class="btn-nav" onclick="prevCard()"' + (state.current <= 0 ? ' disabled' : '') + '>← 前へ</button>';
+  html += '<button class="btn-nav" onclick="nextCard()"' + (state.current >= state.filtered.length - 1 ? ' disabled' : '') + '>次へ →</button>';
   html += '</div>';
 
   area.innerHTML = html;
@@ -1813,15 +1813,15 @@ function renderSummary() {
   var pct = total > 0 ? Math.round(correct / total * 100) : 0;
 
   var html = '<div class="summary">';
-  html += '<div class="summary-title">ã»ãã·ã§ã³å®äºï¼</div>';
+  html += '<div class="summary-title">セッション完了！</div>';
   html += '<div class="summary-stats">';
-  html += '<div class="summary-stat correct"><div class="num">' + correct + '</div><div class="label">æ­£è§£</div></div>';
-  html += '<div class="summary-stat incorrect"><div class="num">' + incorrect + '</div><div class="label">ä¸æ­£è§£</div></div>';
-  html += '<div class="summary-stat"><div class="num">' + skipped + '</div><div class="label">æªåç­</div></div>';
+  html += '<div class="summary-stat correct"><div class="num">' + correct + '</div><div class="label">正解</div></div>';
+  html += '<div class="summary-stat incorrect"><div class="num">' + incorrect + '</div><div class="label">不正解</div></div>';
+  html += '<div class="summary-stat"><div class="num">' + skipped + '</div><div class="label">未回答</div></div>';
   html += '</div>';
   html += '<div style="font-size:48px;font-weight:900;margin-bottom:20px;color:' + (pct >= 80 ? 'var(--correct)' : pct >= 50 ? 'var(--warning)' : 'var(--incorrect)') + ';">' + pct + '%</div>';
-  html += '<div class="btn-row"><button class="btn btn-next" onclick="restart()">ããä¸åº¦</button></div>';
-  html += '<div class="btn-row"><button class="btn btn-review" onclick="retryIncorrect()">ä¸æ­£è§£ã®ã¿åææ¦</button></div>';
+  html += '<div class="btn-row"><button class="btn btn-next" onclick="restart()">もう一度</button></div>';
+  html += '<div class="btn-row"><button class="btn btn-review" onclick="retryIncorrect()">不正解のみ再挑戦</button></div>';
   html += '</div>';
   area.innerHTML = html;
 }
@@ -1902,7 +1902,7 @@ function retryIncorrect() {
     }
   }
   if (wrong.length === 0) {
-    alert('ä¸æ­£è§£ã®ã«ã¼ããããã¾ããã');
+    alert('不正解のカードがありません。');
     return;
   }
   state.filtered = wrong;
@@ -1928,7 +1928,7 @@ function saveMemo() {
 }
 
 function clearHistory(cardId) {
-  if (confirm('ãã®ã«ã¼ãã®åç­å±¥æ­´ããªã»ãããã¾ããï¼')) {
+  if (confirm('このカードの回答履歴をリセットしますか？')) {
     delete state.history[cardId];
     delete state.results[cardId];
     saveState();
