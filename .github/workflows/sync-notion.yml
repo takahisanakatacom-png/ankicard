@@ -1,0 +1,125 @@
+name: Sync Notion Cards
+
+on:
+  schedule:
+    - cron: '0 0,6,12,18 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch cards from Notion API
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DB_ID: '9030bcf2-2bff-41ad-83a3-982954514b7d'
+        run: |
+          python3 << 'SCRIPT'
+          import json
+          import os
+          import urllib.request
+          import urllib.error
+
+          NOTION_TOKEN = os.environ['NOTION_TOKEN']
+          NOTION_DB_ID = os.environ['NOTION_DB_ID']
+
+          def notion_request(url, data=None):
+              headers = {
+                  'Authorization': f'Bearer {NOTION_TOKEN}',
+                  'Content-Type': 'application/json',
+                  'Notion-Version': '2022-06-28'
+              }
+              body = json.dumps(data).encode('utf-8') if data else None
+              req = urllib.request.Request(url, data=body, headers=headers)
+              with urllib.request.urlopen(req) as resp:
+                  return json.loads(resp.read().decode('utf-8'))
+
+          all_results = []
+          has_more = True
+          start_cursor = None
+
+          while has_more:
+              payload = {"page_size": 100}
+              if start_cursor:
+                  payload["start_cursor"] = start_cursor
+              url = f'https://api.notion.com/v1/databases/{NOTION_DB_ID}/query'
+              data = notion_request(url, payload)
+              all_results.extend(data.get('results', []))
+              has_more = data.get('has_more', False)
+              start_cursor = data.get('next_cursor')
+
+          print(f"Fetched {len(all_results)} pages from Notion")
+
+          def get_text(prop):
+              if not prop:
+                  return ''
+              ptype = prop.get('type', '')
+              if ptype == 'title':
+                  return ''.join(t.get('plain_text', '') for t in prop.get('title', []))
+              elif ptype == 'rich_text':
+                  return ''.join(t.get('plain_text', '') for t in prop.get('rich_text', []))
+              elif ptype == 'select':
+                  sel = prop.get('select')
+                  return sel.get('name', '') if sel else ''
+              elif ptype == 'checkbox':
+                  return prop.get('checkbox', False)
+              return ''
+
+          cards = []
+          idx = 1
+          for page in all_results:
+              props = page.get('properties', {})
+              name = get_text(props.get('カード名', {}))
+              question = get_text(props.get('問題文', {}))
+              if not question:
+                  continue
+              card = {
+                  "id": str(idx).zfill(3),
+                  "name": name or '',
+                  "skill": get_text(props.get('スキル', {})),
+                  "subject": get_text(props.get('科目', {})),
+                  "question": question,
+                  "answer": get_text(props.get('解説', {})),
+                  "source": get_text(props.get('出典', {})),
+                  "statute": get_text(props.get('根拠条文', {})),
+                  "trap": get_text(props.get('ひっかけポイント', {})),
+                  "correctAnswer": get_text(props.get('正解', {})),
+                  "checked": bool(get_text(props.get('チェック', {})))
+              }
+              cards.append(card)
+              idx += 1
+
+          print(f"Converted {len(cards)} valid cards")
+
+          with open('cards.json', 'w', encoding='utf-8') as f:
+              json.dump(cards, f, ensure_ascii=False, indent=2)
+
+          print(f"Written cards.json ({os.path.getsize('cards.json')} bytes)")
+          SCRIPT
+
+      - name: Check for changes
+        id: check
+        run: |
+          if git diff --quiet cards.json 2>/dev/null; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes in cards.json"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            CARD_COUNT=$(python3 -c "import json; print(len(json.load(open('cards.json'))))")
+            echo "card_count=$CARD_COUNT" >> $GITHUB_OUTPUT
+            echo "Cards updated: $CARD_COUNT cards"
+          fi
+
+      - name: Commit and push
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add cards.json
+          git commit -m "Sync ${{ steps.check.outputs.card_count }} cards from Notion"
+          git push
