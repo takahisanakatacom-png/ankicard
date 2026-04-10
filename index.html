@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#4a6adf">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
 <title>暗記カード｜司法試験対策</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap');
@@ -73,42 +70,6 @@ body {
 .stat-badge { background:var(--surface2); padding:3px 10px; border-radius:20px; }
 .stat-badge.correct { color:var(--correct); }
 .stat-badge.incorrect { color:var(--incorrect); }
-
-/* Update banner */
-.update-banner {
-  display: none;
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
-  background: var(--accent);
-  color: #fff;
-  text-align: center;
-  padding: 12px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  animation: slideUpBanner 0.3s ease;
-}
-.update-banner.show { display: block; }
-@keyframes slideUpBanner {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-
-/* Loading state */
-.loading-state {
-  text-align: center;
-  padding: 80px 20px;
-  color: var(--text2);
-}
-.loading-state .spinner {
-  width: 40px; height: 40px;
-  border: 3px solid var(--surface3);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 16px;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-state .msg { font-size: 15px; line-height: 1.6; }
 
 /* Filter bar */
 .filter-bar {
@@ -494,12 +455,7 @@ body.dark .card-back {
 <div class="filter-bar" id="filterBar"></div>
 <div class="filter-bar" id="subjectBar" style="display:none;"></div>
 
-<div class="card-area" id="cardArea">
-  <div class="loading-state">
-    <div class="spinner"></div>
-    <div class="msg">カードデータを読み込み中…</div>
-  </div>
-</div>
+<div class="card-area" id="cardArea"></div>
 
 <!-- Filter Modal -->
 <div class="modal-overlay" id="filterModal" onclick="closeFilterModal(event)">
@@ -524,78 +480,1388 @@ body.dark .card-back {
   </div>
 </div>
 
-<!-- Update banner -->
-<div class="update-banner" id="updateBanner" onclick="applyUpdate()">
-  新しいカードが追加されました。タップして更新
-</div>
-
 <script>
-// ====== PWA: CARD DATA LOADER ======
-var CARDS = [];
-var _cardsVersion = '';
-
-// Load cards from external JSON with offline fallback
-function loadCards() {
-  // Try network first, then cache
-  fetch('cards.json?t=' + Date.now())
-    .then(function(r) {
-      if (!r.ok) throw new Error('Network error');
-      return r.json();
-    })
-    .then(function(data) {
-      var newVersion = JSON.stringify(data).length + '_' + data.length;
-      // Save to localStorage as offline fallback
-      try {
-        localStorage.setItem('ankicard_cards', JSON.stringify(data));
-        localStorage.setItem('ankicard_cards_version', newVersion);
-      } catch(e) {}
-
-      if (CARDS.length > 0 && _cardsVersion && newVersion !== _cardsVersion) {
-        // Cards updated while app is open - show update banner
-        window._pendingCards = data;
-        document.getElementById('updateBanner').classList.add('show');
-      } else {
-        CARDS = data;
-        _cardsVersion = newVersion;
-        onCardsLoaded();
-      }
-    })
-    .catch(function() {
-      // Offline - load from localStorage
-      try {
-        var cached = localStorage.getItem('ankicard_cards');
-        if (cached) {
-          CARDS = JSON.parse(cached);
-          _cardsVersion = localStorage.getItem('ankicard_cards_version') || '';
-          onCardsLoaded();
-          return;
-        }
-      } catch(e) {}
-      // No cache available
-      document.getElementById('cardArea').innerHTML =
-        '<div class="empty-state"><div class="icon">📡</div>' +
-        '<div class="msg">初回はオンラインで開いてください。<br>カードデータをダウンロードします。</div></div>';
-    });
-}
-
-function applyUpdate() {
-  if (window._pendingCards) {
-    CARDS = window._pendingCards;
-    _cardsVersion = JSON.stringify(CARDS).length + '_' + CARDS.length;
-    window._pendingCards = null;
-    document.getElementById('updateBanner').classList.remove('show');
-    // Re-init with new cards
-    extractSkillsSubjects();
-    buildFilterBar();
-    buildFilterModal();
-    applyFilters();
+// ====== CARD DATA ======
+var CARDS = [
+  {
+    "id": "001",
+    "name": "短答R7民法9問 供託物取戻し・相殺・更改・混同",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "R7予備 民法 第9問",
+    "statute": "民法496条・509条・513条・520条",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "002",
+    "name": "民法解釈-007 信義則と権利濫用の関係（適用領域の異同）",
+    "skill": "解釈マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "003",
+    "name": "結論の型：よって〜に当たり、〜できる（条文番号）",
+    "skill": "法律用語・言い回しマスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "004",
+    "name": "「この点」vs「思うに」の使い分け",
+    "skill": "法律用語・言い回しマスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "005",
+    "name": "論点001｜信義則（1条2項）がなぜ論点か・学説対立・論証パターン",
+    "skill": "論点マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "帰責性と加害意図・暴利の区別ができなかった。権利濫用（1条3項）と混同した。",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "006",
+    "name": "論点002｜権利濫用（1条3項）がなぜ論点か・学説対立・論証パターン",
+    "skill": "論点マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "論点の所在の説明が結果止まり。宇奈月温泉事件の3要件が整理できなかった。",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "007",
+    "name": "三段論法：答案の型チェック（原則→例外の対置）",
+    "skill": "三段論法マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "008",
+    "name": "三段論法No.003：権利能力の始期（胎児の損害賠償請求）",
+    "skill": "三段論法マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "009",
+    "name": "未成年者取消事件（民法5条1項）",
+    "skill": "判例マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "010",
+    "name": "条文マスター No.004｜3条1項（出生の意義・一部露出説vs全部露出説）",
+    "skill": "条文マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "011",
+    "name": "【要件事実】相殺の抗弁の要件事実（505条）",
+    "skill": "要件事実マスター",
+    "subject": "",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "012",
+    "name": "【要件事実】貸金返還請求・弁済期の定めがない場合の請求原因（No.004）",
+    "skill": "要件事実マスター",
+    "subject": "",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "013",
+    "name": "【要件事実】消滅時効の抗弁の要件事実（166条1項・145条）",
+    "skill": "要件事実マスター",
+    "subject": "",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "014",
+    "name": "信義誠実の原則（信義則）とは？（民法1条2項）",
+    "skill": "定義マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "015",
+    "name": "連帯保証の特約は誰と誰の間で行う？",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "債権者Bと保証人Cの間で行う。主債務者Aと保証人Cの間の合意は不要。保証契約の当事者は債権者と保証人であり、主債務者は当事者ではない。",
+    "source": "R7予備 民法 第8問肢ア",
+    "statute": "民法446条・454条",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "016",
+    "name": "保証に関する3つの情報提供義務の比較（465条の10・458条の2・458条の3）",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "①465条の10＝主債務者→保証人（委託時・契約前）②458条の2＝債権者→委託保証人（請求時）③458条の3＝債権者→個人保証人（期限の利益喪失時、知った時から2か月以内通知）",
+    "source": "R7予備 民法 第8問肢ウ〜オ",
+    "statute": "民法465条の10・458条の2・458条の3",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "017",
+    "name": "連帯保証人の3つの「ない」は？",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "①催告の抗弁権なし②検索の抗弁権なし③分別の利益なし。複数の連帯保証人がいても各自が主債務の全額を負担する。",
+    "source": "R7予備 民法 第8問肢イ",
+    "statute": "民法454条・456条・427条",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "018",
+    "name": "177条「第三者」の意義｜趣旨から規範を導く型",
+    "skill": "法律用語・言い回しマスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "019",
+    "name": "94条2項「善意の第三者」保護｜趣旨から規範を導く型",
+    "skill": "法律用語・言い回しマスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "020",
+    "name": "大坂城用地事件：法人の権利能力の範囲",
+    "skill": "判例マスター",
+    "subject": "民法",
+    "question": "【大坂城用地事件】法人の権利能力の範囲は？目的外行為の効力は？",
+    "answer": "【規範】法人は、法律の規定に従い、定款その他の基本約款で定められた目的の範囲内において、権利を有し義務を負う（民法34条）。目的の範囲を超えた行為は無効。\n【論点】法人の権利能力は定款の目的の範囲内に限定されるか\n【結論】目的外行為は無効\n【百選】民法判例百選I 第1事件 ★★★",
+    "source": "",
+    "statute": "民法33条・34条",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "021",
+    "name": "忍耐力事件：意思能力欠如と法律行為の効力",
+    "skill": "判例マスター",
+    "subject": "民法",
+    "question": "【忍耐力事件】意思能力を欠く者の法律行為の効力は？なぜ取消でなく無効か？",
+    "answer": "【規範】意思能力を欠く状態でなされた法律行為は、絶対的無効である（民法3条の2）。\n【意思能力の定義】自己の行為の結果を正常に判断できる能力\n【無効の理由】意思表示の根本的要素（意思能力）が欠如しているため、法律行為として成立しない\n【無効 vs 取消】無効＝最初から効力なし・誰でも主張可 / 取消＝取消まで一応有効・取消権者のみ\n【百選】民法判例百選I 第2事件 ★★★",
+    "source": "",
+    "statute": "民法3条の2",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "022",
+    "name": "民法2条（解釈の基準）の趣旨・効力・適用場面",
+    "skill": "条文マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "023",
+    "name": "民法-三段-002｜権利濫用（1条3項）の判断基準と利益衡量",
+    "skill": "三段論法マスター",
+    "subject": "民法",
+    "question": "Aは自己所有の土地上にBが無断で設置した小さな物置（時価3万円）の撤去を求めた。しかし撤去費用は200万円を要する。Aの請求は認められるか。",
+    "answer": "権利濫用の判断基準は①客観的要素（権利行使者の利益と相手方の不利益の比較衡量）＋②主観的要素（害意の有無）の総合考慮。本問ではAの回復利益（軽微な土地利用の支障）に比しBの不利益（撤去費用200万円＝時価の約67倍）が著しく大きく、害意の有無にかかわらず権利濫用にあたり許されない。",
+    "source": "",
+    "statute": "民法1条3項",
+    "trap": "「みなされる」は法律上の擬制用語。権利濫用は「該当する」「あたる」が正確。また条文の文言「権利の濫用は、これを許さない」の摘示と判例（宇奈月温泉事件）への言及を忘れない",
+    "correctAnswer": "",
+    "checked": true
+  },
+  {
+    "id": "024",
+    "name": "民法解釈-004｜権利濫用の文言解釈（1杣3項）",
+    "skill": "解釈マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "025",
+    "name": "民法解釈-006｜権利濫用の判断基準（主観的要件説 vs 客観的要件説）",
+    "skill": "解釈マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "026",
+    "name": "民法解釈-005｜宇奈月温泉事件の判断枚組み（権利濫用）",
+    "skill": "解釈マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "027",
+    "name": "見出し-民法-003 第2条（解釈の基準）",
+    "skill": "見出しマスター",
+    "subject": "民法",
+    "question": "入会集団の会則が性別のみに基づく資格制限をしている場合、民法全体の解釈指針として参照すべき条文は？",
+    "answer": "第2条（解釈の基準）「この法律は、個人の尊厳と両性の本質的平等を旨として、解釈しなければならない」。憲法13条・14条・24条を民法に反映した規定。第1条（基本原則）が権利行使のルールなのに対し、第2条は民法全体の解釈の方向性を示す",
+    "source": "見出しマスター No.004",
+    "statute": "民法第2条",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "028",
+    "name": "要件事実No.003｜貸金返還請求の主な抗弁4つと要件事実",
+    "skill": "要件事実マスター",
+    "subject": "民法",
+    "question": "貸金返還請求に対する主な抗弁とその要件事実は？",
+    "answer": "①弁済の抗弁＝いつ・誰に・いくら返した ②相殺の抗弁（505条）＝自働債権の発生原因事実＋相殺適状＋相殺の意思表示 ③消滅時効の抗弁（166条1項）＝5年/10年経過＋援用の意思表示 ④期限未到来の抗弁。※「債券」ではなく「債権」（券＝証券、権＝権利）",
+    "source": "",
+    "statute": "505条・166条1項",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "029",
+    "name": "要件事実No.003｜貸金返還請求の請求原因3要素＋弁済期の主張方法",
+    "skill": "要件事実マスター",
+    "subject": "民法",
+    "question": "貸金返還請求（弁済期の定めあり）の請求原因の要件事実をすべて述べよ。弁済期の到来はどう主張するか？",
+    "answer": "①返還の合意 ②金銭の交付 ③弁済期の到来。弁済期は「弁済期を○年○月○日と定めた」＋「同日は経過した」と具体的日付で主張する。「返済」ではなく「返還」（587条の文言に忠実に）。",
+    "source": "",
+    "statute": "587条・591条1項",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "030",
+    "name": "要件事実No.003｜消滅時効の抗弁に対する再抗弁3つ",
+    "skill": "要件事実マスター",
+    "subject": "民法",
+    "question": "消滅時効の抗弁に対し原告が主張できる再抗弁をすべて述べよ",
+    "answer": "①裁判上の請求（147条1項1号）→完成猶予＋確定判決で更新 ②債務者の承認（152条1項）＝一部弁済も含む。承認するのは債務者（債権者ではない） ③催告（150条）＋6ヶ月以内の裁判上の請求等。催告だけでは6ヶ月の猶予のみ。",
+    "source": "",
+    "statute": "147条1項1号・152条1項・150条",
+    "trap": "承認の主語は債務者。債権者ではない。催告だけでは時効は確定的に止まらない（6ヶ月以内に訴訟提起等が必要）。法定追認（125条）は取消しの制度であり時効とは無関係。",
+    "correctAnswer": "",
+    "checked": true
+  },
+  {
+    "id": "031",
+    "name": "民法-005 所有権絶対の原則の定義は？",
+    "skill": "定義マスター",
+    "subject": "民法",
+    "question": "所有権絶対の原則の定義を述べよ",
+    "answer": "所有権絶対の原則とは、近代私法の基本原則の一つであり、所有者は、その所有物を自由に使用・収益・処分する権能を有し（206条）、何人に対しても排他的にこれを主張しうるとする原則をいう。",
+    "source": "定義マスター No.005（65点）",
+    "statute": "民法206条",
+    "trap": "①「公共の福祉」は定義本体ではなく原則の修正（206条「法令の制限内において」）②使用・収益・処分の3権能がセットで「絶対性」の中身③近代私法の基本原則としての位置づけが必要",
+    "correctAnswer": "",
+    "checked": true
+  },
+  {
+    "id": "032",
+    "name": "民法-重要 近代私法の3大原則の構造",
+    "skill": "定義マスター",
+    "subject": "民法",
+    "question": "近代私法の3大原則を、それぞれの根拠条文とキーワードとともに述べよ",
+    "answer": "①所有権絶対の原則（206条）＝使用・収益・処分の全面支配＋対世的排他性 ②契約自由の原則（521条・522条）＝締結・相手方選択・内容・方式の自由 ③過失責任の原則（709条）＝故意・過失なければ責任なし＝自由な活動の保障",
+    "source": "定義マスター No.005-006",
+    "statute": "民法206条、521条、522条、709条",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "033",
+    "name": "民法-006 過失責任の原則の定義は？",
+    "skill": "定義マスター",
+    "subject": "民法",
+    "question": "過失責任の原則の定義を述べよ",
+    "answer": "過失責任の原則とは、近代私法の基本原則の一つであり、他人に損害を与えた場合であっても、行為者に故意又は過失がなければ損害賠償責任を負わないとする原則をいう（709条）。",
+    "source": "定義マスター No.006（72点）",
+    "statute": "民法709条",
+    "trap": "①「過失」だけでなく「故意又は過失」が正確②「無過失責任」と名称を混同しないこと③趣旨は個人の自由な活動の保障（私的自治）",
+    "correctAnswer": "",
+    "checked": true
+  },
+  {
+    "id": "034",
+    "name": "民法-骨格-008｜売買契約解除の骨格構造",
+    "skill": "骨格マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "035",
+    "name": "民法-骨格-009｜「解除権の意思表示」は誤表現",
+    "skill": "骨格マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "036",
+    "name": "民法-骨格-007｜契約関係がある場面の法律構成の選択",
+    "skill": "骨格マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "037",
+    "name": "民法-骨格-006｜解除権（形成権）と原状回復請求権の区別",
+    "skill": "骨格マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "038",
+    "name": "信義則の4類型（禁反言・権利失効・事情変更・クリーンハンズ）",
+    "skill": "解釈マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "039",
+    "name": "要件事実No.002｜諾成的消費貸借（587条の2）の請求原因と特有の抗弁",
+    "skill": "要件事実マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "040",
+    "name": "短答｜民法412条の2第2項 原始的不能と契約の効力",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "041",
+    "name": "短答｜民法380条 抵当権消滅請求ができない者",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "042",
+    "name": "短答｜民法417条 損害賠償の金銭賠償の原則",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "043",
+    "name": "短答｜民法591条 期限の定めなき消費貸借の催告",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "044",
+    "name": "短答｜第三取得者の競売での買受け",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "045",
+    "name": "短答｜民法416条2項 特別損害の予見可能性",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "046",
+    "name": "短答｜民法391条 第三取得者の必要費の優先償還",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "047",
+    "name": "短答｜民法413条の2第2項 受領遅滞中の履行不能",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "048",
+    "name": "民法-骨格-005｜制限行為能力取消しの模範骨格",
+    "skill": "骨格マスター",
+    "subject": "民法",
+    "question": "制限行為能力に基づく取消しの骨格構造を示せ",
+    "answer": "主体該当性→行為の瑕疵→結論の3層構造。取消権は行使要件の独立検討が不要",
+    "source": "骨格マスター No.002",
+    "statute": "民法5条1項・2項、120条1項",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "049",
+    "name": "民法-骨格-004｜見出しから「要件」を削る理由",
+    "skill": "骨格マスター",
+    "subject": "民法",
+    "question": "メインセクション見出しの「要件」は不要",
+    "answer": "見出しは法的な問い。「要件」は作業予告なので削る",
+    "source": "骨格マスター No.002",
+    "statute": "民法5条2項",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "050",
+    "name": "民法-骨格-003｜タイトルの法的根拠は「原因となる法制度」を書く",
+    "skill": "骨格マスター",
+    "subject": "民法",
+    "question": "未成年者の売買契約取消しのタイトル設計",
+    "answer": "「取消権に基づく」は循環、「法定代理権に基づく」は権限の説明。正解は「制限行為能力に基づく」",
+    "source": "骨格マスター No.002",
+    "statute": "民法5条2項",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "051",
+    "name": "民法-条文-001｜1条2項（信義則）の3機能",
+    "skill": "条文マスター",
+    "subject": "民法",
+    "question": "信義則が機能する典型的場面を3つ挙げよ",
+    "answer": "信義則3機能＝①禁反言②付随義務の発生③事情変更の原則",
+    "source": "条文マスター No.001",
+    "statute": "民法1条2項",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": true
+  },
+  {
+    "id": "052",
+    "name": "民法-条文-002｜1条3項（権利濫用）の判断基準",
+    "skill": "条文マスター",
+    "subject": "民法",
+    "question": "権利濫用の判断基準（宇奈月温泉事件）を述べよ",
+    "answer": "客観（利益衡量）＋主観（加害目的・害意）。効果は行使制限（権利自体は消滅しない）",
+    "source": "条文マスター No.002",
+    "statute": "民法1条3項",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "053",
+    "name": "民法解釈-001 信義則（1条2項）の文言の意義",
+    "skill": "解釈マスター",
+    "subject": "民法",
+    "question": "民法1条2項「信義に従い誠実に」の文言の意義と、一般条項としての機能・限界を説明せよ。",
+    "answer": "「信義に従い誠実に」＝相手方の正当な信頼を裏切らないよう行動すべき一般条項。機能：制限・創設・補充。限界：補充性・最後の手段性。",
+    "source": "",
+    "statute": "民法1条2項",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": true
+  },
+  {
+    "id": "054",
+    "name": "民法解釈-002 信義則（1条2項）の趣旨",
+    "skill": "解釈マスター",
+    "subject": "民法",
+    "question": "信義則（1条2項）は、なぜ民法の冒頭に置かれているのか。私的自治の原則との関係で趣旨を説明せよ。",
+    "answer": "私的自治が前提とする対等性・公正性が欠ける場合に、相手方の正当な信頼を保護し実質的正義を実現する基本原則。",
+    "source": "",
+    "statute": "民法1条2項",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "055",
+    "name": "民法-趣旨-001｜私的自治の原則の趣旨",
+    "skill": "趣旨マスター",
+    "subject": "民法",
+    "question": "私的自治の原則の趣旨は何か？なぜ民法は私人間の法律関係を当事者の意思に委ねるのか？",
+    "answer": "私的自治の原則の趣旨は、個人の尊厳と自己決定の尊重にある（憲法13条）。契約自由の原則（521条）、物権変動の意思主義（176条）など全ての制度の出発点。",
+    "source": "趣旨マスター No.001",
+    "statute": "憲法13条、民法521条、522条",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": true
+  },
+  {
+    "id": "056",
+    "name": "骨格-003｜貸金返還請求の骨格構造（発生→行使→結論）",
+    "skill": "骨格マスター",
+    "subject": "民法",
+    "question": "AがBに500万円を貸し付け、弁済期到来後にBが返済しない場合の答案骨格は？",
+    "answer": "貸金返還請求の骨格は「発生→行使→結論」の3層構造。(1)消費貸借契約の締結＝発生根拠、(2)弁済期の到来＝行使要件。この型はあらゆる請求権の骨格設計の土台。",
+    "source": "骨格マスター No.001 全体",
+    "statute": "民法587条",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "057",
+    "name": "骨格-002｜メインセクションは「成立」で問いを立てる",
+    "skill": "骨格マスター",
+    "subject": "民法",
+    "question": "メインセクション（1.）の見出しは「要件の該当性」と「成立」のどちらが正しいか？",
+    "answer": "「要件の該当性」は抽象的で何を検討するか見えない。「成立」という法的な問いを立てることで三段論法の入り口が自然に始まる。",
+    "source": "骨格マスター No.001 STEP3",
+    "statute": "民法587条",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "058",
+    "name": "骨格-001｜タイトルに条文番号を書かない",
+    "skill": "骨格マスター",
+    "subject": "民法",
+    "question": "答案のタイトル（第1）に条文番号（587条）を入れるのは正しいか？",
+    "answer": "タイトルには条文番号ではなく法律構成の名称（消費貸借契約）を使う。条文番号は本文中の規範定立で初めて登場させる。",
+    "source": "骨格マスター No.001 STEP2",
+    "statute": "民法587条",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "059",
+    "name": "見出し-民法-001 第1条の3つの項の区別（基本原則）",
+    "skill": "見出しマスター",
+    "subject": "民法",
+    "question": "第1条には3つの項がある。それぞれの内容と、見出し名は何か？",
+    "answer": "【第1条の見出し】基本原則（3つの項すべて共通）\n第1項：私権は公共の福祉に適合しなければならない\n第2項：信義誠実の原則（信義則）→ 権利行使・義務履行は信義に従い誠実に\n第3項：権利濫用の禁止\n\n※「信義則」「権利濫用」は通称であり、正式な見出しは全て「基本原則」",
+    "source": "",
+    "statute": "民法第1条",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": true
+  },
+  {
+    "id": "060",
+    "name": "見出し-民法-002 第1条第2項の見出しは？",
+    "skill": "見出しマスター",
+    "subject": "民法",
+    "question": "信義則（第1条第2項）の正式な見出しは何か？答案での正しい摘示方法は？",
+    "answer": "見出し：基本原則（「信義則」は通称であり見出しではない）\n答案での摘示例：「第1条第2項（基本原則）に定める信義誠実の原則に照らし…」\n許容される書き方：「信義則（第1条第2項）に反し…」",
+    "source": "",
+    "statute": "民法第1条第2項",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": true
+  },
+  {
+    "id": "061",
+    "name": "民法-要件-001｜貸金返還請求の請求原因の要件事実（587条）",
+    "skill": "要件事実マスター",
+    "subject": "民法",
+    "question": "貸金返還請求の請求原因として主張すべき要件事実は？（民法587条）",
+    "answer": "① 返還の合意（587条「返還をすることを約して」）\n② 金銭の交付（587条「金銭…を受け取る」）\n③ 弁済期の到来\n\n暗記フレーズ：「貸金＝①返還合意 ②金銭交付 ③弁済期到来」\n\n※消費貸借は要物契約→合意＋交付で成立。587条の2（書面消費貸借）は諾成契約で交付不要。",
+    "source": "",
+    "statute": "民法587条",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "062",
+    "name": "民法-要件-003｜「返済合意」ではなく「返還の合意」",
+    "skill": "要件事実マスター",
+    "subject": "民法",
+    "question": "消費貸借の要件事実で、合意の部分は何と表現するか？",
+    "answer": "「返還の合意」が正しい。「返済合意」は不正確。\n\n587条の文言は「返還をすることを約して」→ 条文に忠実に「返還の合意」と表現する。\n要件事実論では条文の文言に基づいた正確な表現が求められる。",
+    "source": "",
+    "statute": "民法587条",
+    "trap": "「返済」と「返還」を混同しやすい。条文の文言は「返還」。",
+    "correctAnswer": "",
+    "checked": true
+  },
+  {
+    "id": "063",
+    "name": "民法-要件-002｜貸金返還請求の抗弁一覧",
+    "skill": "要件事実マスター",
+    "subject": "民法",
+    "question": "貸金返還請求に対して被告が主張しうる抗弁をすべて挙げよ",
+    "answer": "① 弁済の抗弁（弁済の事実）\n② 消滅時効の抗弁（166条1項）\n③ 相殺の抗弁（505条）\n④ 期限未到来の抗弁\n⑤ 同時履行の抗弁（533条・応用）\n\n暗記フレーズ：「貸金の抗弁＝弁済・時効・相殺・期限未到来（＋同時履行）」",
+    "source": "",
+    "statute": "民法473条, 166条1項, 505条, 533条",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "064",
+    "name": "民法-三段-001｜同時履行の抗弁権（533条）の要件と趣旨　",
+    "skill": "三段論法マスター",
+    "subject": "民法",
+    "question": "同時履行の抗弁権（533条）の要件・趣旨・注意点は？",
+    "answer": "【要件】①双務契約から生じた対価的債務が存在 ②相手方が履行を提供していない ③相手方の債務が弁済期にある（ただし書）\n趣旨：双務契約の対価的牽連関係に基づく公平",
+    "source": "三段論法マスター No.001 信義則",
+    "statute": "民法533条",
+    "trap": "①「履行していない」と「履行を提供していない」の区別 ②ただし書（相手方の債務が弁済期にないときは使えない）を忘れがち",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "065",
+    "name": "条文解釈の問題提起の型（No.002）",
+    "skill": "法律用語・言い回しマスター",
+    "subject": "民法",
+    "question": "条文の文言の意味が不明確で解釈が必要な場面で、問題提起をどう書くか？",
+    "answer": "○○条の「△△」の意義が問題となる。カギ括弧は解釈が必要な文言だけを括る。「意義」という語が必須。",
+    "source": "表現マスター No.002 [A]",
+    "statute": "全条文共通",
+    "trap": "①カギ括弧の範囲を広くしすぎない（条文番号や「とは」を入れない）②「意義」を入れ忘れる",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "066",
+    "name": "【短答】予備R7 民法 第6問肢イ｜一括競売と優先権の範囲",
+    "skill": "短答マスター",
+    "subject": "",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "067",
+    "name": "民法-004 権利能力平等の原則とは？",
+    "skill": "定義マスター",
+    "subject": "民法",
+    "question": "権利能力平等の原則の意義・根拠条文を述べよ",
+    "answer": "すべての自然人は性別・年齢・職業・社会的身分等にかかわらず等しく権利能力を有する原則。3条1項が根拠。",
+    "source": "",
+    "statute": "民法3条1項",
+    "trap": "3条の2（意思能力）との混同に注意。12条は被保佐人の審判で全く別。",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "068",
+    "name": "R7予備 民法 第5問 肢オ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "Ａが死亡した場合において、Ａに相続人がないときは、Ａの持分は、国庫に帰属する。",
+    "answer": "",
+    "source": "R7予備 民法 第5問肢オ",
+    "statute": "民法255条",
+    "trap": "",
+    "correctAnswer": "×（誤り）",
+    "checked": false
+  },
+  {
+    "id": "069",
+    "name": "R7予備 民法 第4問 肢ア",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "ＡがＡ所有の甲土地をＢに売却し、Ｂがその引渡しを受けた時から１年を経過した後、ＡがＣに売却し、Ｃが所有権移転登記を備えたときは、Ｂが主張する所有権の取得時効の期間は、Ｃが所有権移転登記を備えた時から起算する。",
+    "answer": "",
+    "source": "R7予備 民法 第4問肢ア",
+    "statute": "民法162条",
+    "trap": "",
+    "correctAnswer": "×（誤り）",
+    "checked": false
+  },
+  {
+    "id": "070",
+    "name": "R7予備 民法 第4問 肢イ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "入会権の取得は、入会権が共有の性質を有するかどうかにかかわらず、登記をしないで、第三者に対抗することができる。",
+    "answer": "",
+    "source": "R7予備 民法 第4問肢イ",
+    "statute": "民法263条・294条",
+    "trap": "",
+    "correctAnswer": "×（誤り）",
+    "checked": false
+  },
+  {
+    "id": "071",
+    "name": "R7予備 民法 第5問 肢エ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "Ｂが甲土地を単独で使用する場合において、ＡとＢとの間の別段の合意がないときは、Ｂは、自己の持分を超える使用について、Ａに対し、その対価の償還の義務を負わない。",
+    "answer": "",
+    "source": "R7予備 民法 第5問肢エ",
+    "statute": "民法249条",
+    "trap": "",
+    "correctAnswer": "×（誤り）",
+    "checked": false
+  },
+  {
+    "id": "072",
+    "name": "R7予備 民法 第5問 肢ウ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "Ａの債権者Ｅは、自己の費用で、甲土地の分割に参加することができる。",
+    "answer": "",
+    "source": "R7予備 民法 第5問肢ウ",
+    "statute": "民法260条",
+    "trap": "",
+    "correctAnswer": "○（正しい）",
+    "checked": false
+  },
+  {
+    "id": "073",
+    "name": "R7予備 民法 第5問 肢イ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "Ａは、甲土地を不法に占有するＤに対し、単独で甲土地全部の明渡しを求めることができない。",
+    "answer": "",
+    "source": "R7予備 民法 第5問肢イ",
+    "statute": "民法252条ただし書",
+    "trap": "",
+    "correctAnswer": "×（誤り）",
+    "checked": false
+  },
+  {
+    "id": "074",
+    "name": "R7予備 民法 第4問 肢ウ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "不動産質権の設定は、現実の引渡しがあっても、登記をしなければ、第三者に対抗することができない。",
+    "answer": "",
+    "source": "R7予備 民法 第4問肢ウ",
+    "statute": "民法361条",
+    "trap": "",
+    "correctAnswer": "×（誤り）",
+    "checked": false
+  },
+  {
+    "id": "075",
+    "name": "R7予備 民法 第5問 肢ア",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "ＡがＡ及びＢの共有の甲土地の管理のために費用を支払った後、Ｂがその持分をＣに譲渡したときは、Ａは、Ｃに対しても、Ｃの持分に応じてその費用の償還を求めることができる。",
+    "answer": "",
+    "source": "R7予備 民法 第5問肢ア",
+    "statute": "民法253条・254条",
+    "trap": "",
+    "correctAnswer": "○（正しい）",
+    "checked": false
+  },
+  {
+    "id": "076",
+    "name": "R7予備 民法 第4問 肢エ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "ＡがＡのＢに対するα債権を担保するため、Ｃ所有の甲土地についてＣから抵当権の設定を受けた後、Ａがその抵当権をＤのＡに対するβ債権の担保とした場合において、ＡがＢに転抵当権の設定を通知したときであっても、ＡがＣに転抵当権の設定を通知せず、かつＣがこれを承諾しなかったときは、ＣはＤの同意を得ないでしたα債権の弁済をＤに対抗することができる。",
+    "answer": "",
+    "source": "R7予備 民法 第4問肢エ",
+    "statute": "民法376条・377条",
+    "trap": "",
+    "correctAnswer": "×（誤り）",
+    "checked": false
+  },
+  {
+    "id": "077",
+    "name": "R7予備 民法 第4問 肢オ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "ＡがＡ所有の甲土地をＢに売却した後、Ａが死亡した場合において、Ａの唯一の相続人ＣがＡ所有の甲土地をＤに売却したときは、Ｂは、登記を備えないで、甲土地の所有権の取得を第三者Ｄに対抗することができる。",
+    "answer": "",
+    "source": "R7予備 民法 第4問肢オ",
+    "statute": "民法177条、最判S33.10.14",
+    "trap": "",
+    "correctAnswer": "×（誤り）",
+    "checked": false
+  },
+  {
+    "id": "078",
+    "name": "R7予備 民法 第3問 肢ア",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "後順位抵当権者は、先順位抵当権の被担保債権の消滅により後順位抵当権者の抵当権の順位が上昇すれば配当額が増加することになるときであっても、先順位抵当権の被担保債権の消滅時効を援用することができない。",
+    "answer": "",
+    "source": "R7予備 民法 第3問肢ア",
+    "statute": "民法145条、最判H11.10.21",
+    "trap": "",
+    "correctAnswer": "○（正しい）",
+    "checked": false
+  },
+  {
+    "id": "079",
+    "name": "R7予備 民法 第3問 肢ウ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "抵当権が設定された不動産の第三取得者は、その抵当権の被担保債権の消滅時効を援用することができる。",
+    "answer": "",
+    "source": "R7予備 民法 第3問肢ウ",
+    "statute": "民法145条",
+    "trap": "",
+    "correctAnswer": "○（正しい）",
+    "checked": false
+  },
+  {
+    "id": "080",
+    "name": "R7予備 民法 第3問 肢エ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "同一の当事者間に数個の金銭消費貸借契約に基づく各元本債務が存在する場合において、借主が、弁済を充当すべき債務を指定することなく全債務を完済するのに足りない額の弁済をしたときは、その弁済は、特段の事情のない限り、各元本債務についての承認に当たる。",
+    "answer": "",
+    "source": "R7予備 民法 第3問肢エ",
+    "statute": "最判S25.10.10",
+    "trap": "",
+    "correctAnswer": "○（正しい）",
+    "checked": false
+  },
+  {
+    "id": "081",
+    "name": "R7予備 民法 第3問 肢オ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "自己の所有物については、所有権の取得時効を援用することができない。",
+    "answer": "",
+    "source": "R7予備 民法 第3問肢オ",
+    "statute": "最判S42.7.21",
+    "trap": "",
+    "correctAnswer": "×（誤り）",
+    "checked": false
+  },
+  {
+    "id": "082",
+    "name": "R7予備 民法 第3問 肢イ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "債務者は、債務について消滅時効が完成した後に、時効完成の事実を知らずに債権者に対し債務の承認をしたときであっても、消滅時効を援用することができる。",
+    "answer": "",
+    "source": "R7予備 民法 第3問肢イ",
+    "statute": "最判S41.4.20",
+    "trap": "",
+    "correctAnswer": "×（誤り）",
+    "checked": false
+  },
+  {
+    "id": "083",
+    "name": "R7予備 民法 第2問 肢エ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "ＢがＡのした契約について追認を拒絶したときは、その後ＡがＢを相続したとしても、その契約が有効になるものではない。",
+    "answer": "追認拒絶後の相続では契約は有効にならない（最判H10.7.17）。",
+    "source": "R7予備 民法 第2問肢エ",
+    "statute": "民法113条・116条、最判H10.7.17",
+    "trap": "",
+    "correctAnswer": "○（正しい）",
+    "checked": false
+  },
+  {
+    "id": "084",
+    "name": "R7予備 民法 第2問 肢ア",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "Ａがした契約をＢが追認しない間は、Ｃは、その契約を取り消すことができる。",
+    "answer": "無権代理の相手方は本人が追認しない間取消可能。",
+    "source": "R7予備 民法 第2問肢ア",
+    "statute": "民法115条",
+    "trap": "",
+    "correctAnswer": "○（正しい）",
+    "checked": false
+  },
+  {
+    "id": "085",
+    "name": "R7予備 民法 第2問 肢イ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "ＣがＢに対し、相当の期間を定めて、その期間内にＡがした契約を追認するかどうかを確答すべき旨の催告をした場合において、Ｂがその期間内に確答をしないときは、その契約を追認したものとみなされる。",
+    "answer": "確答しない場合は追認拒絶とみなされる。追認したとみなされるのではない。",
+    "source": "R7予備 民法 第2問肢イ",
+    "statute": "民法114条",
+    "trap": "",
+    "correctAnswer": "×（誤り）",
+    "checked": false
+  },
+  {
+    "id": "086",
+    "name": "R7予備 民法 第2問 肢ウ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "ＣがＡに代理権がなかったことを過失によって知らなかったときは、Ａは、Ｃに対して無権代理人の責任を負わない。",
+    "answer": "Aは代理権がないことを知っていたので、Cに過失があっても責任を免れない。",
+    "source": "R7予備 民法 第2問肢ウ",
+    "statute": "民法117条",
+    "trap": "",
+    "correctAnswer": "×（誤り）",
+    "checked": false
+  },
+  {
+    "id": "087",
+    "name": "R7予備 民法 第2問 肢オ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "Ｃから無権代理人の責任として契約の履行を求められたＡは、その履行に代えて、損害の賠償をすることができる。",
+    "answer": "相手方Cに選択権がある。無権代理人Aが勝手に損害賠償を選ぶことはできない。",
+    "source": "R7予備 民法 第2問肢オ",
+    "statute": "民法117条",
+    "trap": "",
+    "correctAnswer": "×（誤り）",
+    "checked": false
+  },
+  {
+    "id": "088",
+    "name": "R7予備 民法 第1問 肢エ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "解除の意思表示を含む内容証明郵便が、受取人が不在のため一定期間郵便局に留置された後に差出人に返送された場合において、受取人がその内容を十分に推知することができなかったとしても、留置期間内に容易にそれを受領することができたときは、その意思表示は、到達したものと認められる。",
+    "answer": "判例は容易に受領できたなら到達を認めるが、推知できたかは別問題。「推知できなかった」の条件を加えても到達が認められる。",
+    "source": "R7予備 民法 第1問肢エ",
+    "statute": "民法97条1項、最判H10.6.11",
+    "trap": "「推知できなかった」条件のすり替え",
+    "correctAnswer": "×（誤り）",
+    "checked": false
+  },
+  {
+    "id": "089",
+    "name": "R7予備 民法 第6問 肢ア",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "建物所有目的で賃貸された土地に築造された建物について抵当権が設定されたときは、その抵当権の効力は、敷地の賃借権に及ぶ。",
+    "answer": "賃借地上の建物に抵当権 → 敷地賃借権にも効力が及ぶ。借地権は建物の従たる権利。",
+    "source": "R7予備 民法 第6問肢ア",
+    "statute": "民法370条、87条2項類推、最判昭40.5.4",
+    "trap": "",
+    "correctAnswer": "○（正しい）",
+    "checked": false
+  },
+  {
+    "id": "090",
+    "name": "R7予備 民法 第1問 肢イ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "意思表示の相手方が意思表示を受けた時点において未成年者であったときでも、その法定代理人がその意思表示を知った後は、表意者は、その意思表示をもってその相手方に対抗することができる。",
+    "answer": "未成年者は受領能力制限あり。法定代理人が知った後は対抗可能。",
+    "source": "R7予備 民法 第1問肢イ",
+    "statute": "民法98条の2",
+    "trap": "",
+    "correctAnswer": "○（正しい）",
+    "checked": false
+  },
+  {
+    "id": "091",
+    "name": "R7予備 民法 第1問 肢ア",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "意思表示の相手方が意思表示を受けた時点において保佐開始の審判を受けていたときであっても、表意者は、その意思表示をもってその相手方に対抗することができる。",
+    "answer": "保佐人は受領能力制限対象外。制限されるのは意思能力を有しない者と未成年者のみ。",
+    "source": "R7予備 民法 第1問肢ア",
+    "statute": "民法98条の2",
+    "trap": "",
+    "correctAnswer": "○（正しい）",
+    "checked": false
+  },
+  {
+    "id": "092",
+    "name": "R7予備 民法 第1問 肢オ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "意思表示の相手方が正当な理由なくその意思表示の通知が到達することを妨げたときは、その通知は、相手方がその到達を妨げた時に到達したものとみなされる。",
+    "answer": "「妨げた時」ではなく「通常到達すべきであった時」に到達したとみなす。時点のすり替えに注意。",
+    "source": "R7予備 民法 第1問肢オ",
+    "statute": "民法97条2項",
+    "trap": "「妨げた時」と「通常到達すべきであった時」のすり替え",
+    "correctAnswer": "×（誤り）",
+    "checked": false
+  },
+  {
+    "id": "093",
+    "name": "R7予備 民法 第1問 肢ウ",
+    "skill": "短答マスター",
+    "subject": "民法",
+    "question": "債権譲渡通知は、債権の譲渡人が債務者の所在を知ることができないときであっても、公示の方法によってすることができない。",
+    "answer": "公示による意思表示は可能。98条は債権譲渡通知にも適用可。",
+    "source": "R7予備 民法 第1問肢ウ",
+    "statute": "民法98条",
+    "trap": "",
+    "correctAnswer": "×（誤り）",
+    "checked": false
+  },
+  {
+    "id": "094",
+    "name": "【法律用語マスター】民法 No.007「思うに」の使い方 2026-04-09",
+    "skill": "法律用語・言い回しマスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "095",
+    "name": "【見出しマスター】民法 No.005 第3条第1項（見出しなし）",
+    "skill": "見出しマスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "096",
+    "name": "論点マスター｜民法No.003｜公序良俗違反（90条）暴利行為論",
+    "skill": "論点マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "097",
+    "name": "定義マスター｜民法 No.008 権利濫用の禁止",
+    "skill": "定義マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "098",
+    "name": "判例マスター 民法 2026-04-09｜第8問 錯誤（昭和32年事件）",
+    "skill": "判例マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "099",
+    "name": "判例マスター 民法 2026-04-09｜第5〜7問",
+    "skill": "判例マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "100",
+    "name": "要件事実マスター｜No.005 貸金返還請求×期限の利益喪失（137条1号）",
+    "skill": "",
+    "subject": "",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "101",
+    "name": "【趣旨】契約自由の原則（521条・522条）",
+    "skill": "趣旨マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "私的自治の具現化＋自己決定の尊重＋効率的資源配分。公序良俗・強行規定・消費者保護による制約。令和改正で初明文化。",
+    "source": "趣旨マスター No.002",
+    "statute": "521条・522条",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": true
+  },
+  {
+    "id": "102",
+    "name": "【趣旨】権利能力平等の原則（3条1項）",
+    "skill": "趣旨マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "天賦人権思想に基づく封建的身分制の否定。出生基準は法律関係の安定のため。近代私法三大原則の一つ。",
+    "source": "趣旨マスター No.003",
+    "statute": "3条1項",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": true
+  },
+  {
+    "id": "103",
+    "name": "条文マスター No.005｜3条の2（意思能力・令和改正で明文化）",
+    "skill": "条文マスター",
+    "subject": "民法",
+    "question": "3条の2の趣旨（令和改正で明文化された理由）・要件・効果・「無効」と「取消し」の違いの理由を述べよ",
+    "answer": "趣旨：大判明38.5.11以来の判例法理を明文化。国民への予測可能性と法的安定性の確保。要件：①法律行為の当事者が②意思表示をした時に③意思能力を有しなかったこと。効果：無効。意思無能力者は有効な意思表示の実体を備えない→取消しではなく当然に無効。意思能力の定義自体は改正でも未明文化で解釈に委ねる。",
+    "source": "",
+    "statute": "民法3条の2",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": true
+  },
+  {
+    "id": "104",
+    "name": "解釈No.008-009｜「出生」の文言解釈（全部露出説vs一部露出説・相対的出生説）",
+    "skill": "解釈マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "105",
+    "name": "解釈No.010｜胎児の権利能力の例外（721条・886条・965条）と停止条件説",
+    "skill": "解釈マスター",
+    "subject": "民法",
+    "question": "",
+    "answer": "",
+    "source": "",
+    "statute": "",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
+  },
+  {
+    "id": "106",
+    "name": "失踪宣告の取消しとBC間の婚姻の効力",
+    "skill": "三段論法マスター",
+    "subject": "民法",
+    "question": "Aが普通失踪の宣告を受け、BはCと再婚した。後にAの生存が判明し失踪宣告が取り消された。BとCの婚姻の効力はどうなるか。",
+    "answer": "【大前提】失踪宣告を受けた者は死亡とみなされ（31条）、婚姻は消滅する（728条1項）。失踪宣告が取り消されると原則遡及消滅するが（32条1項本文）、取消し前にB・C双方が善意でした行為の効力には影響を及ぼさない（同項ただし書）。【結論】B・C双方が善意であれば、BC間の婚姻は有効に存続する。【注意】①失踪宣言→失踪宣告（正確な用語）②728条1項は直接適用（類推不要）③あてはめでB・C双方の善意を明示する",
+    "source": "",
+    "statute": "民法30条・31条・32条1項・728条1項",
+    "trap": "",
+    "correctAnswer": "",
+    "checked": false
   }
-}
-
-function onCardsLoaded() {
-  extractSkillsSubjects();
-  init();
-}
+];
 
 // ====== SRS (Spaced Repetition) ======
 var SRS_INTERVALS = [1, 3, 7, 14, 30, 60];
@@ -653,19 +1919,17 @@ var state = {
 // ====== SKILLS & SUBJECTS ======
 var SKILLS = [];
 var SUBJECTS = [];
-function extractSkillsSubjects() {
+(function() {
   var sk = {}, su = {};
   for (var i = 0; i < CARDS.length; i++) {
     if (CARDS[i].skill) sk[CARDS[i].skill] = true;
     if (CARDS[i].subject) su[CARDS[i].subject] = true;
   }
-  SKILLS = [];
-  SUBJECTS = [];
   for (var k in sk) SKILLS.push(k);
   for (var k in su) SUBJECTS.push(k);
   SKILLS.sort();
   SUBJECTS.sort();
-}
+})();
 
 // ====== THEME ======
 function toggleTheme() {
@@ -712,6 +1976,14 @@ function loadState() {
         if (s.srs) state.srs = s.srs;
       }
     } catch(e) {}
+  }
+  if (!state.canSave) {
+    setTimeout(function() {
+      var banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:300;background:#d97706;color:#1a1d27;text-align:center;padding:10px 16px;font-size:13px;font-weight:600;';
+      banner.textContent = '\u26a0 \u30d7\u30ec\u30d3\u30e5\u30fc\u74b0\u5883\u306e\u305f\u3081\u4fdd\u5b58\u3067\u304d\u307e\u305b\u3093\u3002\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9\u3057\u3066Safari\u3067\u958b\u3044\u3066\u304f\u3060\u3055\u3044\u3002';
+      document.body.appendChild(banner);
+    }, 500);
   }
 }
 
@@ -791,6 +2063,7 @@ function getSubjectsForSkill(skill) {
 
 function buildSubjectBar() {
   var bar = document.getElementById('subjectBar');
+  // Show subject bar for skill-specific or status-specific filters
   if (state.filterSkill === 'all' && state.filterStatus === 'all') {
     bar.style.display = 'none';
     return;
@@ -834,18 +2107,21 @@ function subjectFilter(el, val) {
 
 // ====== FILTER MODAL ======
 function buildFilterModal() {
+  // Skills
   var skillHtml = '<button class="filter-chip active" data-val="all" onclick="toggleModalFilter(this,\'skill\')">全て</button>';
   for (var i = 0; i < SKILLS.length; i++) {
     skillHtml += '<button class="filter-chip" data-val="' + SKILLS[i] + '" onclick="toggleModalFilter(this,\'skill\')">' + SKILLS[i].replace('マスター','') + '</button>';
   }
   document.getElementById('skillFilters').innerHTML = skillHtml;
 
+  // Subjects
   var subHtml = '<button class="filter-chip active" data-val="all" onclick="toggleModalFilter(this,\'subject\')">全て</button>';
   for (var i = 0; i < SUBJECTS.length; i++) {
     subHtml += '<button class="filter-chip" data-val="' + SUBJECTS[i] + '" onclick="toggleModalFilter(this,\'subject\')">' + SUBJECTS[i] + '</button>';
   }
   document.getElementById('subjectFilters').innerHTML = subHtml;
 
+  // Status
   var statHtml = '<button class="filter-chip active" data-val="all" onclick="toggleModalFilter(this,\'status\')">全て</button>';
   statHtml += '<button class="filter-chip" data-val="due_today" onclick="toggleModalFilter(this,\'status\')">今日の復習</button>';
   statHtml += '<button class="filter-chip" data-val="wrong_only" onclick="toggleModalFilter(this,\'status\')">間違いのみ</button>';
@@ -928,11 +2204,11 @@ function updateStats() {
   }
   var dueCount = getDueCount('all');
   document.getElementById('statTotal').textContent = '全 ' + total + ' 枚';
-  document.getElementById('statCorrect').textContent = '⭕ ' + correct;
-  document.getElementById('statIncorrect').textContent = '❌ ' + incorrect;
+  document.getElementById('statCorrect').textContent = '\u2B55 ' + correct;
+  document.getElementById('statIncorrect').textContent = '\u274C ' + incorrect;
   document.getElementById('statPos').textContent = (total > 0 ? (state.current + 1) : 0) + ' / ' + total;
   var dueEl = document.getElementById('statDue');
-  if (dueEl) dueEl.textContent = '🔔 ' + dueCount;
+  if (dueEl) dueEl.textContent = '\uD83D\uDD14 ' + dueCount;
 }
 
 // ====== RENDER CARD ======
@@ -978,7 +2254,7 @@ function renderCard() {
     var maxShow = 8;
     var start = hist.length > maxShow ? hist.length - maxShow : 0;
     for (var h = start; h < hist.length; h++) {
-      var icon = hist[h].result === 'correct' ? '⭕' : '❌';
+      var icon = hist[h].result === 'correct' ? '\u2B55' : '\u274C';
       html += '<span class="attempt-dot" title="' + esc(hist[h].date) + '">' + (h - start + 1 + start) + '回' + icon + '</span>';
     }
     html += '<span class="attempt-count">計' + hist.length + '回</span>';
@@ -1083,9 +2359,11 @@ function flipCard() {
 function markResult(result) {
   var c = state.filtered[state.current];
   state.results[c.id] = result;
+  // Append to history
   if (!state.history[c.id]) state.history[c.id] = [];
   var today = getToday();
   state.history[c.id].push({ date: today, result: result });
+  // SRS update
   var cur = state.srs[c.id] || { level: 0, nextReview: today, lastReview: today };
   if (result === 'correct') {
     cur.level = Math.min(cur.level + 1, SRS_INTERVALS.length - 1);
@@ -1183,41 +2461,9 @@ function esc(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ====== PWA: Service Worker Registration ======
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').then(function(reg) {
-    // Check for SW updates periodically
-    setInterval(function() { reg.update(); }, 60 * 60 * 1000); // every hour
-  });
-  // Listen for SW update message
-  navigator.serviceWorker.addEventListener('message', function(event) {
-    if (event.data && event.data.type === 'CARDS_UPDATED') {
-      // Reload cards from network
-      loadCards();
-    }
-  });
-}
-
-// ====== PWA: Background sync check ======
-// When the app becomes visible again, check for updated cards
-document.addEventListener('visibilitychange', function() {
-  if (!document.hidden && CARDS.length > 0) {
-    // Silently check for updates
-    fetch('cards.json?t=' + Date.now())
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        var newVersion = JSON.stringify(data).length + '_' + data.length;
-        if (newVersion !== _cardsVersion) {
-          window._pendingCards = data;
-          document.getElementById('updateBanner').classList.add('show');
-        }
-      })
-      .catch(function() { /* offline, ignore */ });
-  }
-});
-
-// Start loading cards
-loadCards();
+// Start
+init();
 </script>
 </body>
 </html>
+ 
