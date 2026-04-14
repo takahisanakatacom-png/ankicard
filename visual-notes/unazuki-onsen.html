@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>【判例解説】宇奈月温泉事件（大判昭10・10・5）</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans JP',sans-serif;background:#f8f7f4;color:#2C2C2A;line-height:1.7;padding:20px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:20px;font-weight:700;margin-bottom:6px;color:#26215C}
+.subtitle{font-size:14px;color:#5F5E5A;margin-bottom:20px}
+.meta-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
+.badge{display:inline-block;font-size:11px;font-weight:500;padding:3px 10px;border-radius:6px}
+.badge-s{background:#EEEDFE;color:#3C3489}
+.badge-field{background:#e8e7e2;color:#5F5E5A;font-size:12px;padding:3px 8px;border-radius:4px}
+
+.tabs{display:flex;gap:4px;border-bottom:1px solid #D3D1C7;margin-bottom:0;flex-wrap:wrap}
+.tab{padding:10px 16px;font-size:13px;font-weight:500;color:#5F5E5A;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .2s}
+.tab.active{color:#26215C;border-bottom-color:#534AB7}
+.tab:hover{color:#26215C}
+.panel{display:none;padding:20px 0}
+.panel.active{display:block}
+
+.card{background:#fff;border:1px solid #e8e7e2;border-radius:12px;padding:18px 22px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card-purple{border-left:4px solid #534AB7;border-radius:0 12px 12px 0}
+.card-teal{border-left:4px solid #0F6E56;border-radius:0 12px 12px 0}
+.card-amber{border-left:4px solid #BA7517;border-radius:0 12px 12px 0}
+.card-red{border-left:4px solid #A32D2D;border-radius:0 12px 12px 0}
+.card-green{border-left:4px solid #639922;border-radius:0 12px 12px 0}
+.card-blue{border-left:4px solid #185FA5;border-radius:0 12px 12px 0}
+
+.section-title{font-size:15px;font-weight:700;margin-bottom:10px;color:#2C2C2A}
+.sub-label{font-size:12px;color:#5F5E5A;margin-bottom:4px;font-weight:500}
+.body-text{font-size:14px;line-height:1.8;color:#2C2C2A}
+.highlight{background:#EEEDFE;color:#3C3489;padding:2px 6px;border-radius:4px;font-weight:500}
+.highlight-red{background:#FCEBEB;color:#791F1F;padding:2px 6px;border-radius:4px;font-weight:500}
+.highlight-green{background:#EAF3DE;color:#27500A;padding:2px 6px;border-radius:4px;font-weight:500}
+.highlight-amber{background:#FAEEDA;color:#633806;padding:2px 6px;border-radius:4px;font-weight:500}
+
+.acc-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:12px 0;border-bottom:1px solid #e8e7e2;user-select:none}
+.acc-header:hover .section-title{color:#534AB7}
+.acc-body{display:none;padding:14px 0;font-size:14px;line-height:1.8}
+.acc-body.open{display:block}
+.chevron{transition:transform .2s;font-size:12px;color:#888780}
+.chevron.open{transform:rotate(90deg)}
+
+.kihan-box{margin-top:10px;padding:14px 18px;background:#EEEDFE;border-radius:10px;color:#3C3489;font-weight:500;font-size:14px;line-height:1.9}
+
+.vs-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+@media(max-width:600px){.vs-grid{grid-template-columns:1fr}}
+
+.template-box{padding:18px;background:#fafaf8;border:1px solid #e8e7e2;border-radius:10px;font-size:14px;line-height:2;margin-top:10px}
+
+svg text{font-family:'Noto Sans JP',sans-serif}
+
+.footer{text-align:center;margin-top:40px;padding:16px;font-size:12px;color:#888780;border-top:1px solid #e8e7e2}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>⚖️ 宇奈月温泉事件（大判昭10・10・5）</h1>
+<p class="subtitle">権利濫用法理のリーディングケース ── 民法百選Ⅰ（第9版）No.1</p>
+
+<div class="meta-row">
+  <span class="badge badge-s">重要度 S（必須）</span>
+  <span class="badge-field">民法</span>
+  <span class="badge-field">民法百選Ⅰ No.1</span>
+  <span class="badge-field">大判昭10・10・5</span>
+  <span class="badge-field">関連：民法1条3項</span>
+</div>
+
+<!-- ===== TABS ===== -->
+<div class="tabs" id="tabs">
+  <button class="tab active" onclick="showTab(0)">関係図</button>
+  <button class="tab" onclick="showTab(1)">IRAC分析</button>
+  <button class="tab" onclick="showTab(2)">答案の骨格</button>
+  <button class="tab" onclick="showTab(3)">採点実感</button>
+  <button class="tab" onclick="showTab(4)">答案テンプレート</button>
+</div>
+
+<!-- ===== TAB 0: 関係図 ===== -->
+<div class="panel active" id="p0">
+<svg width="100%" viewBox="0 0 680 400">
+  <rect x="40" y="40" width="200" height="70" rx="10" fill="#EEEDFE" stroke="#534AB7" stroke-width="1"/>
+  <text x="140" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="#3C3489">品川弥次郎（上告人・原告）</text>
+  <text x="140" y="90" text-anchor="middle" font-size="11" fill="#534AB7">係争土地の所有者</text>
+
+  <rect x="400" y="40" width="240" height="70" rx="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1"/>
+  <text x="520" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="#085041">黒部鉄道株式会社（被告）</text>
+  <text x="520" y="90" text-anchor="middle" font-size="11" fill="#0F6E56">引湯管を無権原で敷設</text>
+
+  <line x1="240" y1="75" x2="398" y2="75" stroke="#A32D2D" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="320" y="66" text-anchor="middle" font-size="11" fill="#A32D2D" font-weight="500">妨害排除請求</text>
+
+  <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+  <rect x="40" y="170" width="200" height="56" rx="10" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+  <text x="140" y="192" text-anchor="middle" font-size="13" font-weight="700" fill="#444441">係争土地（約2坪）</text>
+  <text x="140" y="212" text-anchor="middle" font-size="11" fill="#888780">荒蕪地・価格約30円</text>
+
+  <rect x="400" y="170" width="240" height="56" rx="10" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.5"/>
+  <text x="520" y="192" text-anchor="middle" font-size="13" font-weight="700" fill="#633806">引湯管（全長約4170間）</text>
+  <text x="520" y="212" text-anchor="middle" font-size="11" fill="#854F0B">撤去→温泉場壊滅・迂回費約1.2万円</text>
+
+  <line x1="140" y1="110" x2="140" y2="168" stroke="#888780" stroke-width="0.5" marker-end="url(#arr)"/>
+  <text x="155" y="145" font-size="11" fill="#888780">所有</text>
+
+  <line x1="520" y1="110" x2="520" y2="168" stroke="#888780" stroke-width="0.5" marker-end="url(#arr)"/>
+  <text x="535" y="145" font-size="11" fill="#888780">無権原敷設</text>
+
+  <rect x="160" y="280" width="360" height="80" rx="10" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+  <text x="340" y="308" text-anchor="middle" font-size="13" font-weight="700" fill="#712B13">品川の真の意図</text>
+  <text x="340" y="330" text-anchor="middle" font-size="11" fill="#993C1D">引湯管の存在を知って土地を買収</text>
+  <text x="340" y="348" text-anchor="middle" font-size="11" fill="#993C1D">→ 無関係の土地3千坪を含め約2万円で買取要求</text>
+
+  <line x1="140" y1="226" x2="200" y2="278" stroke="#B4B2A9" stroke-width="0.5" stroke-dasharray="4 4"/>
+  <line x1="520" y1="226" x2="480" y2="278" stroke="#B4B2A9" stroke-width="0.5" stroke-dasharray="4 4"/>
+</svg>
+</div>
+
+<!-- ===== TAB 1: IRAC分析 ===== -->
+<div class="panel" id="p1">
+
+<div class="card card-purple">
+  <div class="acc-header" onclick="toggleAcc(this)">
+    <span class="section-title" style="margin:0;color:#3C3489">🔍 Issue（論点）</span>
+    <span class="chevron open">▶</span>
+  </div>
+  <div class="acc-body open">
+    <p class="body-text">所有権に基づく妨害排除請求権（物権的請求権）の行使が<span class="highlight">権利の濫用</span>（民法1条3項）に当たるか。</p>
+    <p class="body-text" style="margin-top:8px">具体的には、被告が無権原で自己の土地に引湯管を敷設している場合に、土地所有者がその撤去を求めることが、所有権の正当な行使といえるか、それとも権利の濫用に該当するか。</p>
+  </div>
+</div>
+
+<div class="card card-teal">
+  <div class="acc-header" onclick="toggleAcc(this)">
+    <span class="section-title" style="margin:0;color:#085041">⚖️ Rule（規範）★暗記必須★</span>
+    <span class="chevron">▶</span>
+  </div>
+  <div class="acc-body">
+    <p class="body-text">所有権に対する侵害又はその危険が存する以上、所有者は裁判上の保護を請求し得るのは勿論であるが、</p>
+    <div class="kihan-box">
+      ❶ 侵害による損失が僅少であり、<br>
+      ❷ 侵害の除去が著しく困難で莫大な費用を要する場合に、<br>
+      ❸ 第三者がこの事実を奇貨として不当な利益を図り、殊更に侵害に関係する物件を買収した上、一方で侵害状態の除去を迫り、他方で不相当に巨額な代金での買取りを要求し、他の一切の協調に応じないときは、<br><br>
+      → 当該除去請求は<span class="highlight-red">所有権行使の外形を構えるに止まり</span>、全体として<span class="highlight-red">専ら不当な利益の掴得を目的とし</span>、所有権をその具に供するものであるから、<span class="highlight-red">社会観念上所有権の目的に違背し、その機能として許さるべき範囲を超脱するもの</span>であって、<strong>権利の濫用</strong>に外ならない。
+    </div>
+    <p class="sub-label" style="margin-top:12px">【理由付け】</p>
+    <p class="body-text">所有権は排他的支配権であるが、社会観念上その目的に沿った行使であることが求められ、不当な利益を得る目的のみで行使することは、権利に内在する社会的制約を逸脱する。</p>
+  </div>
+</div>
+
+<div class="card card-amber">
+  <div class="acc-header" onclick="toggleAcc(this)">
+    <span class="section-title" style="margin:0;color:#633806">🔎 Application（当てはめ）</span>
+    <span class="chevron">▶</span>
+  </div>
+  <div class="acc-body">
+    <p class="sub-label">事実の摘示</p>
+    <p class="body-text">① 係争樋管の敷地は約2坪の荒蕪地であり、殖林・農作その他何等の利用にも適さず、土地全部の価格は僅か30余円に過ぎない。</p>
+    <p class="body-text">② 引湯管を撤去すれば全長約4170間の引湯設備が中断し、宇奈月温泉場の経営は全く破壊される。迂回工事には約1万2千円・約270日を要する。</p>
+    <p class="body-text">③ 品川は引湯管の存在を知りながら利用目的もなく本件土地を買い受け、撤去を迫る一方、係争地と無関係の土地約3千坪を含め総額2万余円での買取りを要求し、他の一切の協調に応じなかった。</p>
+    <p class="sub-label" style="margin-top:12px">評価</p>
+    <p class="body-text">品川の行為は、引湯管の存在を奇貨として不当な利益を掴得する目的で不要な土地を買収し、所有権の行使に藉口して被告を困惑させるものであり、所有権の正当な行使たる外形を構えるに止まる。</p>
+    <p class="sub-label" style="margin-top:12px">小結論</p>
+    <p class="body-text">本件請求は<span class="highlight-red">権利の濫用</span>であり、保護を与うべき正当な利益を欠如する。</p>
+  </div>
+</div>
+
+<div class="card card-green">
+  <div class="acc-header" onclick="toggleAcc(this)">
+    <span class="section-title" style="margin:0;color:#27500A">✅ Conclusion（結論）</span>
+    <span class="chevron">▶</span>
+  </div>
+  <div class="acc-body">
+    <p class="body-text">よって、品川の妨害排除請求は権利の濫用として<strong>棄却</strong>される。上告棄却（原審維持）。</p>
+    <p class="body-text" style="margin-top:8px">大審院は、原審が本訴請求を権利の濫用に基づくものとして棄却した判断を相当と認め、上告を棄却した。</p>
+  </div>
+</div>
+</div>
+
+<!-- ===== TAB 2: 答案の骨格 ===== -->
+<div class="panel" id="p2">
+<svg width="100%" viewBox="0 0 680 440">
+  <defs><marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+  <rect x="40" y="20" width="600" height="70" rx="10" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+  <text x="56" y="46" font-size="13" font-weight="700" fill="#3C3489">Step 1：問題提起</text>
+  <text x="56" y="70" font-size="11" fill="#534AB7">Xの所有権に基づく妨害排除請求は認められるか。権利の濫用に当たらないか。</text>
+  <line x1="340" y1="90" x2="340" y2="115" stroke="#888780" stroke-width="0.5" marker-end="url(#arr2)"/>
+
+  <rect x="40" y="120" width="600" height="90" rx="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="56" y="146" font-size="13" font-weight="700" fill="#085041">Step 2：規範定立</text>
+  <text x="56" y="170" font-size="11" fill="#0F6E56">所有権の行使も、社会観念上その目的に違背し、その機能として許さるべき</text>
+  <text x="56" y="190" font-size="11" fill="#0F6E56">範囲を超脱する場合には、権利の濫用（民法1条3項）として許されない。</text>
+  <line x1="340" y1="210" x2="340" y2="235" stroke="#888780" stroke-width="0.5" marker-end="url(#arr2)"/>
+
+  <rect x="40" y="240" width="600" height="100" rx="10" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.5"/>
+  <text x="56" y="266" font-size="13" font-weight="700" fill="#633806">Step 3：当てはめ（厚く書く！）</text>
+  <text x="56" y="290" font-size="11" fill="#854F0B">① 侵害による損失の僅少性（2坪・30円 vs 撤去すれば温泉場壊滅）</text>
+  <text x="56" y="310" font-size="11" fill="#854F0B">② 不当利得の目的（利用目的なし・引湯管の存在を知って買収・2万円要求）</text>
+  <text x="56" y="330" font-size="11" fill="#854F0B">→ 全体として不当な利益の掴得が目的 = 所有権の正当な行使ではない</text>
+  <line x1="340" y1="340" x2="340" y2="365" stroke="#888780" stroke-width="0.5" marker-end="url(#arr2)"/>
+
+  <rect x="40" y="370" width="600" height="50" rx="10" fill="#EAF3DE" stroke="#639922" stroke-width="0.5"/>
+  <text x="56" y="400" font-size="13" font-weight="700" fill="#27500A">Step 4：結論 →「よって、Xの請求は権利の濫用として認められない。」</text>
+</svg>
+
+<div class="section-title" style="margin-top:20px">NG vs OK 対比</div>
+<div class="vs-grid">
+  <div class="card card-red">
+    <p class="sub-label">✗ NG答案</p>
+    <p class="body-text" style="font-size:13px">「本件請求は権利の濫用である。よって棄却される。」<br>→ <strong>事実の摘示ゼロ・評価ゼロ</strong>。なぜ権利濫用なのか全く不明。大減点。</p>
+  </div>
+  <div class="card card-green">
+    <p class="sub-label">✓ OK答案</p>
+    <p class="body-text" style="font-size:13px">「Xは、本件土地上に引湯管が敷設されていることを知りながら、利用目的もなく同土地を買い受け（事実）、撤去を迫る一方で不相当に巨額な買取りを要求しており（事実）、これは不当な利益の掴得を目的とするものといえる（評価）。」</p>
+  </div>
+</div>
+</div>
+
+<!-- ===== TAB 3: 採点実感 ===== -->
+<div class="panel" id="p3">
+
+<div class="card card-green">
+  <p class="section-title">✅ 加点ポイント</p>
+  <p class="body-text">① 権利濫用の<strong>主観的要素</strong>（不当な利益を図る意図）と<strong>客観的要素</strong>（損害と利益の著しい不均衡）の<strong>両方</strong>を指摘できている答案は高評価。</p>
+  <p class="body-text" style="margin-top:6px">② 「社会観念上所有権の目的に違背し、その機能として許さるべき範囲を超脱する」という大審院の定式を正確に引用できると加点。</p>
+  <p class="body-text" style="margin-top:6px">③ 民法1条3項の明文規定との関係（本判決は1条3項制定前だが、同条項の趣旨と合致する旨の言及）ができると理解の深さが伝わる。</p>
+</div>
+
+<div class="card card-red">
+  <p class="section-title">❌ 大減点ポイント</p>
+  <p class="body-text">① 「権利の濫用だから請求棄却」と結論だけ書き、<strong>当てはめがない答案</strong>。</p>
+  <p class="body-text" style="margin-top:6px">② 権利濫用の判断要素を<strong>客観面のみ</strong>（損害の不均衡だけ）で論じ、主観面（害意・加害目的）に触れていない答案。</p>
+  <p class="body-text" style="margin-top:6px">③ 所有権の<strong>物権的請求権の根拠</strong>に全く触れずにいきなり権利濫用の話を始める答案。</p>
+</div>
+
+<div class="card card-amber">
+  <p class="section-title">🚨 引っかけポイント（短答頻出）</p>
+  <p class="body-text">① 本判決は<strong>大審院判決</strong>（最高裁ではない）。「最判昭10年」と書くと誤り。正しくは<span class="highlight-amber">大判昭10・10・5</span>。</p>
+  <p class="body-text" style="margin-top:6px">② 本判決時点では民法1条3項は<strong>まだ存在しない</strong>（昭和22年改正で新設）。</p>
+  <p class="body-text" style="margin-top:6px">③ 権利濫用＝<strong>請求棄却</strong>であって、権利の不存在ではない。権利自体は否定されていない。</p>
+  <p class="body-text" style="margin-top:6px">④ 「権利濫用の要件」として<strong>主観的要件のみ</strong>で足りるか、<strong>客観的要件も必要</strong>かは学説上争いがある。判例は両者を総合的に考慮する立場。</p>
+</div>
+
+<div class="card card-purple">
+  <p class="section-title">📌 論文で書けるようにすること</p>
+  <p class="body-text">• 権利濫用の規範定立（主観面＋客観面の総合考慮）<br>• 当てはめの3点セット（事実→評価→小結論）<br>• 所有権の排他性と社会的制約の関係</p>
+</div>
+
+<div class="card card-blue">
+  <p class="section-title">📌 短答で覚えておくこと</p>
+  <p class="body-text">• 民法1条3項「権利の濫用は、これを許さない」<br>• 宇奈月温泉事件は<strong>大審院</strong>判決（昭和10年）<br>• 権利濫用の効果＝請求の棄却（権利自体は存続）<br>• 権利濫用の判断＝主観的要素＋客観的要素の総合考慮<br>• 信義則（1条2項）と権利濫用（1条3項）の区別</p>
+</div>
+</div>
+
+<!-- ===== TAB 4: 答案テンプレート ===== -->
+<div class="panel" id="p4">
+<div class="card">
+  <p class="section-title">そのまま使える答案テンプレート</p>
+  <div class="template-box">
+    <p><strong>【問題提起】</strong></p>
+    <p style="margin-bottom:12px">　Xは、本件土地の所有権に基づき、Yに対して引湯管の収去を求めている。もっとも、Yは、本件請求が権利の濫用（民法1条3項）に当たると主張しているため、この点が問題となる。</p>
+    <p><strong>【規範定立】</strong></p>
+    <p style="margin-bottom:12px">　所有権に対する侵害が存する以上、所有者が妨害排除を請求し得ることは当然である。もっとも、所有権の行使も無制約ではなく、<span class="highlight">社会観念上所有権の目的に違背し、その機能として許さるべき範囲を超脱する場合</span>には、権利の濫用として許されないと解する（民法1条3項）。</p>
+    <p>　具体的には、❶侵害による損失と除去による損害との<strong>客観的不均衡</strong>の程度、及び❷権利行使者が専ら<strong>不当な利益の掴得を目的</strong>としているか否かの<strong>主観的事情</strong>を総合的に考慮して判断すべきである。</p>
+    <p style="margin-bottom:12px">　なぜなら、所有権は排他的支配権ではあるが、その行使も社会共同生活との調和の下になされるべきであり、他人を害する目的のみでなされる権利行使は、権利に内在する社会的制約を逸脱するからである。</p>
+    <p><strong>【当てはめ】</strong></p>
+    <p style="margin-bottom:12px">　本件では、係争地は約2坪の荒蕪地であり、殖林・農作その他何らの利用にも適さず、侵害による損失は僅少である。他方、引湯管を撤去すれば宇奈月温泉場の経営は全く破壊され、その損害は甚大である（客観面）。<br>
+    　また、Xは引湯管の存在を知りながら利用目的もなく本件土地を買い受け、撤去を迫る一方で不相当に巨額な買取りを要求し、他の一切の協調に応じていない。これらの事実に照らせば、Xの行為は全体として専ら不当な利益の掴得を目的とし、所有権をその具に供するものと評価できる（主観面）。</p>
+    <p><strong>【結論】</strong></p>
+    <p>　よって、Xの本件請求は、社会観念上所有権の目的に違背し、その機能として許さるべき範囲を超脱するものであり、権利の濫用として許されない。</p>
+  </div>
+</div>
+</div>
+
+<div class="footer">
+  宇奈月温泉事件 図解ノート ── 司法試験・予備試験 AI学習アシスタント
+</div>
+
+</div>
+
+<script>
+function showTab(n){
+  document.querySelectorAll('.tab').forEach((t,i)=>{t.classList.toggle('active',i===n)});
+  document.querySelectorAll('.panel').forEach((p,i)=>{p.classList.toggle('active',i===n)});
+}
+function toggleAcc(el){
+  const body=el.nextElementSibling;
+  const chev=el.querySelector('.chevron');
+  body.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+</script>
+</body>
+</html>
